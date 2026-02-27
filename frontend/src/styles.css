@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-950 text-slate-100 font-sans;
+}
+
+.glass {
+  @apply bg-glass/80 backdrop-blur-md shadow-glass border border-white/5;
+}
+
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 160ms ease-out, transform 160ms ease-out;
+}
+
