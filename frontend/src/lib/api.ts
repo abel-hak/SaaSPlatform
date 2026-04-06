@@ -55,6 +55,9 @@ export interface MeResponse {
     name: string;
     slug: string;
     plan: PlanName;
+    ai_provider: 'groq' | 'openai' | 'anthropic';
+    ai_model: string | null;
+    ai_api_key: string | null;
   };
 }
 

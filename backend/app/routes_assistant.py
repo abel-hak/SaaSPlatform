@@ -141,7 +141,13 @@ async def chat(
 
     async def token_stream():
         answer_parts: list[str] = []
-        async for token in stream_chat_completion(org_plan=plan, prompt=prompt):
+        async for token in stream_chat_completion(
+            org_plan=plan,
+            prompt=prompt,
+            ai_provider=org.ai_provider,
+            ai_model=org.ai_model,
+            ai_api_key=org.ai_api_key,
+        ):
             answer_parts.append(token)
             yield token
 
