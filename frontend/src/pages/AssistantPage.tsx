@@ -16,6 +16,20 @@ interface ChatMessage {
   sources?: unknown[];
   error?: boolean;
 }
+const renderMessageWithCitations = (content: string) => {
+  const parts = content.split(/(\[Source \d+\])/g);
+  return parts.map((part, i) => {
+    if (part.match(/^\[Source \d+\]$/)) {
+      const num = part.replace('[Source ', '').replace(']', '');
+      return (
+        <span key={i} className="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 text-[10px] font-bold leading-none text-brand-700 bg-brand-100/80 rounded select-none shadow-sm border border-brand-200 align-text-bottom" title={`Source Document ${num}`}>
+          {num}
+        </span>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
 
 const AssistantPage: React.FC = () => {
   const plan = usePlan() as PlanName | null;
