@@ -11,6 +11,12 @@ const SettingsPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [savingOrg, setSavingOrg] = useState(false);
   const [savingPw, setSavingPw] = useState(false);
+  
+  // AI Settings State
+  const [aiProvider, setAiProvider] = useState<'groq' | 'openai' | 'anthropic'>(me?.organization.ai_provider ?? 'groq');
+  const [aiModel, setAiModel] = useState(me?.organization.ai_model ?? '');
+  const [aiApiKey, setAiApiKey] = useState(me?.organization.ai_api_key ?? '');
+  const [savingAi, setSavingAi] = useState(false);
 
   const updateOrg = async () => {
     setSavingOrg(true);
@@ -21,6 +27,22 @@ const SettingsPage: React.FC = () => {
       toast.error('Unable to update organization');
     } finally {
       setSavingOrg(false);
+    }
+  };
+
+  const updateAiPrefs = async () => {
+    setSavingAi(true);
+    try {
+      await api.patch('/settings/org/ai-prefs', {
+        ai_provider: aiProvider,
+        ai_model: aiModel || undefined,
+        ai_api_key: aiApiKey || undefined,
+      });
+      toast.success('AI preferences updated. API Key saved securely.');
+    } catch {
+      toast.error('Unable to update AI preferences');
+    } finally {
+      setSavingAi(false);
     }
   };
 
@@ -86,6 +108,60 @@ const SettingsPage: React.FC = () => {
           </button>
         </div>
       </section>
+
+      {/* AI Preferences (BYOK) */}
+      {me?.user.role === 'owner' && (
+      <section className="card p-6 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Building2 className="w-4 h-4 text-brand-500" />
+          <h2 className="text-sm font-semibold text-slate-800">AI Provider (Bring Your Own Key)</h2>
+        </div>
+        <div className="h-px bg-surface-border" />
+        <div className="space-y-4 max-w-sm">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Provider</label>
+            <select
+              value={aiProvider}
+              onChange={(e) => setAiProvider(e.target.value as any)}
+              className="input bg-white"
+            >
+              <option value="groq">Groq (Default, Llama 3 Fast)</option>
+              <option value="openai">OpenAI (GPT-4o, GPT-3.5)</option>
+              <option value="anthropic">Anthropic (Claude 3.5 Sonnet)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Model Name (Optional)</label>
+            <input
+              type="text"
+              value={aiModel}
+              onChange={(e) => setAiModel(e.target.value)}
+              className="input"
+              placeholder={aiProvider === 'openai' ? 'gpt-4o' : aiProvider === 'anthropic' ? 'claude-3-5-sonnet-20240620' : 'llama3-8b-8192'}
+            />
+            <p className="mt-1 text-xs text-slate-400">Leave blank to use default workspace model.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">API Key (Optional)</label>
+            <input
+              type="password"
+              value={aiApiKey}
+              onChange={(e) => setAiApiKey(e.target.value)}
+              className="input font-mono text-xs"
+              placeholder="sk-..."
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              Paste your own API key to bypass workspace usage limits. Keys are stored safely.
+            </p>
+          </div>
+        </div>
+        <div>
+          <button onClick={updateAiPrefs} disabled={savingAi} className="btn-secondary text-xs py-2 px-4 shadow-sm">
+            {savingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save AI Preferences'}
+          </button>
+        </div>
+      </section>
+      )}
 
       {/* Password */}
       <section className="card p-6 space-y-4">

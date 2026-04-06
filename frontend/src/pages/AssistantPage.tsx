@@ -294,7 +294,9 @@ const AssistantPage: React.FC = () => {
                     ? 'bg-red-50 border border-red-200 text-red-700 rounded-tl-sm'
                     : 'bg-surface-subtle border border-surface-border text-slate-800 rounded-tl-sm'
               }`}>
-                <div className="whitespace-pre-wrap break-words">{m.content}</div>
+                <div className="whitespace-pre-wrap break-words">
+                  {renderMessageWithCitations(m.content)}
+                </div>
               </div>
             </div>
           ))}
