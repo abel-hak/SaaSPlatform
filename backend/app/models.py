@@ -30,6 +30,12 @@ class Organization(Base):
     stripe_customer_id = Column(String(255), nullable=True)
     stripe_subscription_id = Column(String(255), nullable=True)
     plan = Column(String(50), nullable=False, default="free")
+    
+    # AI Settings (BYOK configuration)
+    ai_provider = Column(String(50), nullable=False, default="groq")
+    ai_model = Column(String(255), nullable=True) 
+    ai_api_key = Column(String(512), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 

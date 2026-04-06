@@ -32,9 +32,18 @@ class OrganizationBase(BaseModel):
     name: str
     slug: str
     plan: PlanName
+    ai_provider: str
+    ai_model: Optional[str] = None
+    ai_api_key: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+
+class UpdateAIPrefsRequest(BaseModel):
+    ai_provider: Literal["groq", "openai", "anthropic"]
+    ai_model: Optional[str] = None
+    ai_api_key: Optional[str] = None
 
 
 class MeResponse(BaseModel):
