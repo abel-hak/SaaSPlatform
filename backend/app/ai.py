@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, AsyncGenerator, Iterable, List, Tuple
+import asyncio
+import logging
+from typing import Any, AsyncGenerator, List, Tuple
 from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 import chromadb
 from chromadb.utils import embedding_functions
@@ -15,7 +18,27 @@ from .config import PlanName, get_plan_limits, get_settings
 settings = get_settings()
 
 chroma_client = chromadb.PersistentClient(path=settings.chroma_persist_directory)
-embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+
+# Lazy embedding function — loaded on first use so startup is never blocked
+# by a network request to HuggingFace.
+_embedding_fn = None
+
+def _get_embedding_fn():
+    global _embedding_fn
+    if _embedding_fn is not None:
+        return _embedding_fn
+    try:
+        _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="all-MiniLM-L6-v2"
+        )
+        logger.info("SentenceTransformer embedding loaded successfully.")
+    except Exception as exc:
+        logger.warning(
+            "Could not load SentenceTransformer model (%s). "
+            "Falling back to ChromaDB default embedding.", exc
+        )
+        _embedding_fn = embedding_functions.DefaultEmbeddingFunction()
+    return _embedding_fn
 
 groq_client = Groq(api_key=settings.groq_api_key)
 
@@ -25,7 +48,10 @@ def _collection_name(org_id: UUID) -> str:
 
 
 def get_org_collection(org_id: UUID):
-    return chroma_client.get_or_create_collection(name=_collection_name(org_id), embedding_function=embedding_fn)
+    return chroma_client.get_or_create_collection(
+        name=_collection_name(org_id),
+        embedding_function=_get_embedding_fn(),
+    )
 
 
 def chunk_text(text: str, size: int = 800, overlap: int = 150) -> List[str]:
@@ -64,8 +90,14 @@ def query_context(
     query: str,
     top_k: int = 5,
 ) -> Tuple[str, list[dict[str, Any]]]:
+    """Query ChromaDB for relevant context. Returns empty result if collection has no documents."""
     collection = get_org_collection(org_id)
-    result = collection.query(query_texts=[query], n_results=top_k)
+    try:
+        # ChromaDB raises an exception if the collection is empty
+        result = collection.query(query_texts=[query], n_results=top_k)
+    except Exception as exc:
+        logger.debug("ChromaDB query returned no results (collection may be empty): %s", exc)
+        return "", []
     docs = result.get("documents", [[]])[0]
     metadatas = result.get("metadatas", [[]])[0]
     context_parts: List[str] = []
@@ -96,14 +128,15 @@ async def stream_chat_completion(
     org_plan: PlanName,
     prompt: str,
 ) -> AsyncGenerator[str, None]:
+    """Stream chat completion from Groq without blocking the event loop."""
     plan_config = get_plan_limits(org_plan)
     model = plan_config["model"]
-    stream = groq_client.chat.completions.create(
+    # Run the blocking Groq SDK call in a thread pool so the event loop stays free
+    stream = await asyncio.to_thread(
+        groq_client.chat.completions.create,
         model=model,
         stream=True,
-        messages=[
-            {"role": "user", "content": prompt},
-        ],
+        messages=[{"role": "user", "content": prompt}],
     )
     for chunk in stream:
         delta = chunk.choices[0].delta

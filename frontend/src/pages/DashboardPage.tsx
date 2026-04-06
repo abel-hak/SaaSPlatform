@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, UploadCloud, MessageCircle, Users } from 'lucide-react';
+import { ArrowRight, UploadCloud, MessageCircle, Users, TrendingUp } from 'lucide-react';
 import { api, UsageMetrics, UsageResponse } from '../lib/api';
 import { useAuth, usePlan } from '../context/AuthContext';
 import UsageMeters from '../components/UsageMeters';
@@ -12,92 +12,91 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get<UsageResponse>('/usage/');
-        setUsage(res.data.usage);
-      } catch {
-        // ignore
-      }
-    };
-    load();
+    api.get<UsageResponse>('/usage/').then((r) => setUsage(r.data.usage)).catch(() => {});
   }, []);
 
   const planLabel = plan === 'enterprise' ? 'Enterprise' : plan === 'pro' ? 'Pro' : 'Free';
-  const planColor =
-    plan === 'enterprise'
-      ? 'bg-brand-violet/10 text-brand-violet border-brand-violet/40'
-      : plan === 'pro'
-      ? 'bg-brand-indigo/10 text-brand-indigo border-brand-indigo/40'
-      : 'bg-slate-800/60 text-slate-200 border-slate-700';
+  const planBadge = plan === 'free' || !plan ? 'badge-neutral' : 'badge-brand';
 
-  const onUpgradeClick = () => navigate('/app/billing');
+  const quickActions = [
+    {
+      title: 'Upload document',
+      description: 'Ingest PDFs, Markdown, and text files.',
+      icon: UploadCloud,
+      color: 'text-brand-600',
+      bg: 'bg-brand-50',
+      to: '/app/documents',
+    },
+    {
+      title: 'Ask Aurora AI',
+      description: 'Chat with an assistant grounded in your docs.',
+      icon: MessageCircle,
+      color: 'text-violet-600',
+      bg: 'bg-violet-50',
+      to: '/app/assistant',
+    },
+    {
+      title: 'Invite teammates',
+      description: 'Share your AI workspace with your team.',
+      icon: Users,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      to: '/app/team',
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="page-header">
         <div>
-          <div className="text-xs text-slate-400 mb-1">Welcome back</div>
-          <h1 className="text-xl font-semibold text-slate-100">{me?.organization.name}</h1>
+          <p className="text-sm text-slate-500 mb-1">Welcome back</p>
+          <h1 className="page-title">{me?.organization.name}</h1>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border ${planColor}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <div className="flex items-center gap-2">
+          <span className={planBadge}>
+            <TrendingUp className="w-3 h-3" />
             {planLabel} plan
           </span>
           <button
-            onClick={onUpgradeClick}
-            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-900/70 border border-slate-700 text-slate-200 hover:border-brand-indigo/60"
+            onClick={() => navigate('/app/billing')}
+            className="btn-secondary text-xs py-1.5 px-3"
           >
             Manage billing
-            <ArrowRight className="w-3 h-3" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
-      </header>
+      </div>
 
-      <UsageMeters usage={usage} onUpgradeClick={onUpgradeClick} />
+      {/* Usage */}
+      <section>
+        <h2 className="text-sm font-semibold text-slate-700 mb-3">Usage this month</h2>
+        <UsageMeters usage={usage} onUpgradeClick={() => navigate('/app/billing')} />
+      </section>
 
-      <section className="grid md:grid-cols-3 gap-4">
-        <button
-          onClick={() => navigate('/app/documents')}
-          className="glass rounded-2xl px-4 py-3 flex items-center justify-between hover:border-brand-indigo/40 transition-colors"
-        >
-          <div className="space-y-1 text-left">
-            <div className="text-xs font-semibold text-slate-100">Upload document</div>
-            <div className="text-[11px] text-slate-400">Ingest PDFs, markdown, and more.</div>
-          </div>
-          <div className="h-8 w-8 rounded-xl bg-brand-indigo/20 flex items-center justify-center">
-            <UploadCloud className="w-4 h-4 text-brand-indigo" />
-          </div>
-        </button>
-        <button
-          onClick={() => navigate('/app/assistant')}
-          className="glass rounded-2xl px-4 py-3 flex items-center justify-between hover:border-brand-indigo/40 transition-colors"
-        >
-          <div className="space-y-1 text-left">
-            <div className="text-xs font-semibold text-slate-100">Ask Aurora</div>
-            <div className="text-[11px] text-slate-400">Chat with an assistant grounded in your docs.</div>
-          </div>
-          <div className="h-8 w-8 rounded-xl bg-brand-violet/20 flex items-center justify-center">
-            <MessageCircle className="w-4 h-4 text-brand-violet" />
-          </div>
-        </button>
-        <button
-          onClick={() => navigate('/app/team')}
-          className="glass rounded-2xl px-4 py-3 flex items-center justify-between hover:border-brand-indigo/40 transition-colors"
-        >
-          <div className="space-y-1 text-left">
-            <div className="text-xs font-semibold text-slate-100">Invite teammates</div>
-            <div className="text-[11px] text-slate-400">Share your AI workspace with your team.</div>
-          </div>
-          <div className="h-8 w-8 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-            <Users className="w-4 h-4 text-emerald-300" />
-          </div>
-        </button>
+      {/* Quick actions */}
+      <section>
+        <h2 className="text-sm font-semibold text-slate-700 mb-3">Quick actions</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {quickActions.map((action) => (
+            <button
+              key={action.to}
+              onClick={() => navigate(action.to)}
+              className="card p-4 text-left flex items-start gap-3 hover:shadow-card-hover transition-shadow group"
+            >
+              <div className={`h-9 w-9 rounded-lg ${action.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                <action.icon className={`w-4.5 h-4.5 ${action.color}`} />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-slate-800 mb-0.5">{action.title}</div>
+                <div className="text-xs text-slate-500 leading-relaxed">{action.description}</div>
+              </div>
+            </button>
+          ))}
+        </div>
       </section>
     </div>
   );
 };
 
 export default DashboardPage;
-

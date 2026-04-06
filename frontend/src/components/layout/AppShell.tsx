@@ -1,209 +1,171 @@
 import React, { useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, MessageCircle, FileText, Users, CreditCard, Settings, Activity, LayoutDashboard } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
+import {
+  Menu, X, MessageCircle, FileText, Users, CreditCard,
+  Settings, Activity, LayoutDashboard, LogOut
+} from 'lucide-react';
 import { useAuth, usePlan } from '../../context/AuthContext';
 
-const navItemClass =
-  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800/80';
+interface NavItem {
+  to: string;
+  icon: React.ElementType;
+  label: string;
+  end?: boolean;
+  restricted?: boolean;
+}
 
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { me, logout } = useAuth();
   const plan = usePlan();
-  const [open, setOpen] = useState(false);
-  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAuditEnabled = plan === 'pro' || plan === 'enterprise';
 
+  const navItems: NavItem[] = [
+    { to: '/app',             icon: LayoutDashboard, label: 'Dashboard',    end: true },
+    { to: '/app/assistant',   icon: MessageCircle,   label: 'AI Assistant'           },
+    { to: '/app/documents',   icon: FileText,        label: 'Documents'              },
+    { to: '/app/team',        icon: Users,           label: 'Team'                   },
+    { to: '/app/billing',     icon: CreditCard,      label: 'Billing'                },
+    { to: '/app/settings',    icon: Settings,        label: 'Settings'               },
+    { to: '/app/audit-log',   icon: Activity,        label: 'Audit Log', restricted: !isAuditEnabled },
+  ];
+
+  const planBadge = plan === 'enterprise' || plan === 'pro' ? 'badge-brand' : 'badge-neutral';
+  const planLabel = plan === 'enterprise' ? 'Enterprise' : plan === 'pro' ? 'Pro' : 'Free';
+  const initials = me?.user.email?.slice(0, 2).toUpperCase() ?? 'AU';
+
+  const SidebarNav = () => (
+    <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      {navItems.map((item) => {
+        if (item.restricted) {
+          return (
+            <div
+              key={item.to}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 cursor-not-allowed select-none"
+            >
+              <item.icon className="w-4 h-4 flex-shrink-0" />
+              <span>{item.label}</span>
+              <span className="ml-auto badge badge-neutral text-[10px] py-0">Pro+</span>
+            </div>
+          );
+        }
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            onClick={() => setMobileOpen(false)}
+            className={({ isActive }) =>
+              isActive ? 'nav-item-active' : 'nav-item'
+            }
+          >
+            <item.icon className="w-4 h-4 flex-shrink-0" />
+            <span>{item.label}</span>
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex">
-      {/* Sidebar */}
-      <div className="hidden md:flex w-64 flex-col border-r border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-800/80">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-brand-indigo to-brand-violet flex items-center justify-center text-xs font-bold">
-            AI
+    <div className="min-h-screen bg-surface-page flex">
+
+      {/* ── Desktop Sidebar ── */}
+      <aside className="hidden md:flex w-60 flex-col bg-surface-card border-r border-surface-border fixed inset-y-0 z-20">
+
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-surface-border flex-shrink-0">
+          <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9"/>
+              <circle cx="9" cy="9" r="2.5" fill="white"/>
+            </svg>
           </div>
-          <div>
-            <div className="text-sm font-semibold">Aurora Workspace</div>
-            <div className="text-xs text-slate-400">{me?.organization.name}</div>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-slate-900 truncate">Aurora</div>
+            <div className="text-xs text-slate-400 truncate">{me?.organization.name}</div>
           </div>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1 text-slate-300 text-sm">
-          <NavLink to="/app" className={({ isActive }) => `${navItemClass} ${isActive ? 'bg-slate-800' : ''}`}>
-            <LayoutDashboard className="w-4 h-4" />
-            Dashboard
-          </NavLink>
-          <NavLink
-            to="/app/assistant"
-            className={({ isActive }) => `${navItemClass} ${isActive ? 'bg-slate-800' : ''}`}
-          >
-            <MessageCircle className="w-4 h-4" />
-            AI Assistant
-          </NavLink>
-          <NavLink
-            to="/app/documents"
-            className={({ isActive }) => `${navItemClass} ${isActive ? 'bg-slate-800' : ''}`}
-          >
-            <FileText className="w-4 h-4" />
-            Documents
-          </NavLink>
-          <NavLink to="/app/team" className={({ isActive }) => `${navItemClass} ${isActive ? 'bg-slate-800' : ''}`}>
-            <Users className="w-4 h-4" />
-            Team
-          </NavLink>
-          <NavLink
-            to="/app/billing"
-            className={({ isActive }) => `${navItemClass} ${isActive ? 'bg-slate-800' : ''}`}
-          >
-            <CreditCard className="w-4 h-4" />
-            Billing
-          </NavLink>
-          <NavLink
-            to="/app/settings"
-            className={({ isActive }) => `${navItemClass} ${isActive ? 'bg-slate-800' : ''}`}
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </NavLink>
-          {isAuditEnabled ? (
-            <NavLink
-              to="/app/audit-log"
-              className={({ isActive }) => `${navItemClass} ${isActive ? 'bg-slate-800' : ''}`}
-            >
-              <Activity className="w-4 h-4" />
-              Audit Log
-            </NavLink>
-          ) : (
-            <div className={`${navItemClass} opacity-60 cursor-not-allowed`}>
-              <Activity className="w-4 h-4" />
-              Audit Log
-              <span className="ml-auto text-2xs px-1.5 py-0.5 rounded-full bg-brand-indigo/10 text-brand-indigo">
-                Pro+
-              </span>
-            </div>
-          )}
-        </nav>
-        <div className="px-4 py-3 border-t border-slate-800/80 text-xs text-slate-400 flex items-center justify-between">
-          <div>
-            <div className="font-medium text-slate-200 text-xs">{me?.user.email}</div>
-            <div className="flex items-center gap-1">
-              <span className="capitalize">{me?.user.role}</span>
-              <span>•</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  plan === 'enterprise'
-                    ? 'bg-brand-violet/10 text-brand-violet'
-                    : plan === 'pro'
-                    ? 'bg-brand-indigo/10 text-brand-indigo'
-                    : 'bg-slate-800 text-slate-300'
-                }`}
-              >
-                {plan === 'enterprise' ? 'Enterprise' : plan === 'pro' ? 'Pro' : 'Free'}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            className="text-xs text-slate-400 hover:text-slate-100 hover:underline transition-colors"
-          >
-            Log out
-          </button>
-        </div>
-      </div>
 
-      {/* Mobile top bar */}
-      <div className="md:hidden fixed inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-3 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
-        <Link to="/app" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-brand-indigo to-brand-violet flex items-center justify-center text-xs font-bold">
-            AI
-          </div>
-          <span className="text-sm font-semibold">Aurora Workspace</span>
-        </Link>
-        <button
-          className="inline-flex items-center justify-center rounded-lg p-1.5 border border-slate-700 bg-slate-900/80"
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
+        <SidebarNav />
 
-      {open && (
-        <div className="md:hidden fixed inset-0 z-20 bg-slate-950/80 backdrop-blur-sm" onClick={() => setOpen(false)}>
-          <div
-            className="absolute top-16 inset-x-3 glass rounded-2xl p-3 space-y-1 text-sm text-slate-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <NavLink
-              to="/app"
-              className={({ isActive }) =>
-                `${navItemClass} ${isActive ? 'bg-slate-800' : ''} w-full justify-start`
-              }
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </NavLink>
-            <NavLink
-              to="/app/assistant"
-              className={({ isActive }) =>
-                `${navItemClass} ${isActive ? 'bg-slate-800' : ''} w-full justify-start`
-              }
-            >
-              <MessageCircle className="w-4 h-4" />
-              AI Assistant
-            </NavLink>
-            <NavLink
-              to="/app/documents"
-              className={({ isActive }) =>
-                `${navItemClass} ${isActive ? 'bg-slate-800' : ''} w-full justify-start`
-              }
-            >
-              <FileText className="w-4 h-4" />
-              Documents
-            </NavLink>
-            <NavLink
-              to="/app/team"
-              className={({ isActive }) =>
-                `${navItemClass} ${isActive ? 'bg-slate-800' : ''} w-full justify-start`
-              }
-            >
-              <Users className="w-4 h-4" />
-              Team
-            </NavLink>
-            <NavLink
-              to="/app/billing"
-              className={({ isActive }) =>
-                `${navItemClass} ${isActive ? 'bg-slate-800' : ''} w-full justify-start`
-              }
-            >
-              <CreditCard className="w-4 h-4" />
-              Billing
-            </NavLink>
-            <NavLink
-              to="/app/settings"
-              className={({ isActive }) =>
-                `${navItemClass} ${isActive ? 'bg-slate-800' : ''} w-full justify-start`
-              }
-            >
-              <Settings className="w-4 h-4" />
-              Settings
-            </NavLink>
+        {/* User footer */}
+        <div className="px-3 pb-4 pt-2 border-t border-surface-border flex-shrink-0">
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg group">
+            <div className="h-8 w-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium text-slate-800 truncate">{me?.user.email}</div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-xs text-slate-400 capitalize">{me?.user.role}</span>
+                <span className={`${planBadge} text-[10px] px-1.5 py-0`}>{planLabel}</span>
+              </div>
+            </div>
             <button
               onClick={logout}
-              className="w-full text-left text-xs text-slate-400 hover:text-slate-100 px-3 py-2 rounded-lg"
+              title="Log out"
+              className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-surface-subtle transition-all"
             >
-              Log out
+              <LogOut className="w-3.5 h-3.5" />
             </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Mobile Top Bar ── */}
+      <header className="md:hidden fixed inset-x-0 top-0 z-30 h-14 flex items-center justify-between px-4 bg-surface-card border-b border-surface-border">
+        <Link to="/app" className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9"/>
+              <circle cx="9" cy="9" r="2.5" fill="white"/>
+            </svg>
+          </div>
+          <span className="text-sm font-semibold text-slate-900">Aurora</span>
+        </Link>
+        <button
+          className="p-2 rounded-lg text-slate-600 hover:bg-surface-subtle transition-colors"
+          onClick={() => setMobileOpen((v) => !v)}
+        >
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </header>
+
+      {/* ── Mobile Drawer ── */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-20 bg-black/30 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        >
+          <div
+            className="absolute top-14 left-0 right-0 bottom-0 bg-surface-card border-t border-surface-border p-3 overflow-y-auto animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SidebarNav />
+            <div className="mt-2 pt-3 border-t border-surface-border">
+              <button
+                onClick={() => { logout(); setMobileOpen(false); }}
+                className="nav-item w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <LogOut className="w-4 h-4" />
+                Log out
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Main content */}
-      <main className="flex-1 min-h-screen md:ml-0 md:pl-64">
+      {/* ── Main Content ── */}
+      <main className="flex-1 md:pl-60 min-h-screen flex flex-col">
         <div className="md:hidden h-14" />
-        <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">{children}</div>
+        <div className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 md:py-8 animate-page">
+          {children}
+        </div>
       </main>
     </div>
   );
 };
 
 export default AppShell;
-

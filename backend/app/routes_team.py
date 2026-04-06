@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
 from typing import Optional
 
@@ -15,6 +15,7 @@ from .dependencies import (
     get_usage_for_org,
     require_role,
 )
+from .email_service import send_invite_email
 from .models import Invite, Organization, Usage, User
 
 
@@ -66,7 +67,7 @@ def invite_member(
         email=payload.email,
         token=token,
         role=payload.role,
-        expires_at=datetime.utcnow() + timedelta(days=7),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=7),
     )
     db.add(invite)
     db.commit()
@@ -79,7 +80,16 @@ def invite_member(
         {"email": payload.email, "role": payload.role},
     )
 
-    # In production, send invite email including token.
+    # Bug 4 fix: deliver the invite link to the invitee
+    from .config import get_settings
+    settings = get_settings()
+    send_invite_email(
+        email=payload.email,
+        token=token,
+        org_name=org.name,
+        inviter_email=current_user.email,
+        frontend_origin=str(settings.frontend_origin),
+    )
     return {"status": "ok"}
 
 
@@ -106,7 +116,7 @@ def accept_invite(payload: schemas.InviteAcceptRequest, db: Session = Depends(ge
         password_hash=get_password_hash(payload.password),
         role=invite.role,
         is_verified=True,
-        last_login=datetime.utcnow(),
+        last_login=datetime.now(timezone.utc),
     )
     db.add(user)
 
@@ -118,7 +128,7 @@ def accept_invite(payload: schemas.InviteAcceptRequest, db: Session = Depends(ge
         db.flush()
     usage.seats_used += 1
 
-    invite.accepted_at = datetime.utcnow()
+    invite.accepted_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(user)
@@ -141,7 +151,8 @@ def update_member_role(
     org: Organization = Depends(get_current_org),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.id == member_id and current_user.role == "owner" and payload.role != "owner":
+    # Bug 8 fix: compare str(UUID) to str to avoid UUID != str always-False comparison
+    if str(current_user.id) == member_id and current_user.role == "owner" and payload.role != "owner":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Owner cannot demote self")
 
     member = db.query(User).filter(User.id == member_id, User.org_id == org.id).first()

@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -23,7 +24,13 @@ def create_refresh_token(subject: str, expires_delta: Optional[timedelta] = None
     if expires_delta is None:
         expires_delta = timedelta(days=settings.refresh_token_expire_days)
     expire = datetime.now(timezone.utc) + expires_delta
-    to_encode: dict[str, Any] = {"sub": subject, "exp": expire, "type": "refresh"}
+    # jti (JWT ID) uniquely identifies this token so it can be blacklisted on revocation
+    to_encode: dict[str, Any] = {
+        "sub": subject,
+        "exp": expire,
+        "type": "refresh",
+        "jti": str(uuid.uuid4()),
+    }
     return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 

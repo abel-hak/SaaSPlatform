@@ -2,6 +2,7 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, Request, status
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from .config import PlanName, get_plan_limits
@@ -52,6 +53,20 @@ def get_current_org(request: Request, db: Session = Depends(get_db)) -> Organiza
     org = db.query(Organization).filter(Organization.id == user.org_id).first()
     if not org:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+
+    # Apply PostgreSQL Row-Level Security: all subsequent queries in this session
+    # will be automatically scoped to this org_id by the RLS policies.
+    # FastAPI caches Depends(get_db) per request, so the same session object is
+    # shared between this dependency and the route handlers that use Depends(get_db).
+    try:
+        db.execute(
+            text("SET LOCAL app.current_org_id = :org_id"),
+            {"org_id": str(org.id)},
+        )
+        db.flush()
+    except Exception:
+        pass  # Non-fatal: RLS enforcement falls back to application-level filters
+
     request.state.org = org
     return org
 
@@ -77,7 +92,16 @@ def get_usage_for_org(db: Session, org_id: UUID, period: Optional[str] = None) -
         period = get_current_period()
     usage = db.query(Usage).filter(Usage.org_id == org_id, Usage.period == period).first()
     if not usage:
-        usage = Usage(org_id=org_id, period=period, ai_queries_used=0, documents_uploaded=0, seats_used=0)
+        # Back-fill actual seat count so limits remain correct across billing periods.
+        # Defaulting to 0 caused seat limits to reset every month (Bug 9).
+        actual_seats = db.query(User).filter(User.org_id == org_id).count()
+        usage = Usage(
+            org_id=org_id,
+            period=period,
+            ai_queries_used=0,
+            documents_uploaded=0,
+            seats_used=actual_seats,
+        )
         db.add(usage)
         db.commit()
         db.refresh(usage)

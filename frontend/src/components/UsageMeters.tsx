@@ -1,37 +1,29 @@
 import React from 'react';
 import { UsageMetrics } from '../lib/api';
+import { Zap, FileText, Users, ArrowUpRight } from 'lucide-react';
 
 interface Props {
   usage: UsageMetrics | null;
   onUpgradeClick?: () => void;
 }
 
+const icons = [Zap, FileText, Users];
+
 const meterColor = (used: number, limit: number | null) => {
-  if (!limit || limit === 0) return 'bg-emerald-500';
-  const ratio = used / limit;
-  if (ratio >= 1) return 'bg-rose-500';
-  if (ratio >= 0.8) return 'bg-amber-400';
-  return 'bg-emerald-500';
+  if (!limit) return 'bg-brand-500';
+  const r = used / limit;
+  if (r >= 1)   return 'bg-red-500';
+  if (r >= 0.8) return 'bg-amber-500';
+  return 'bg-brand-500';
 };
 
 const UsageMeters: React.FC<Props> = ({ usage, onUpgradeClick }) => {
   if (!usage) return null;
+
   const items = [
-    {
-      label: 'AI Queries',
-      used: usage.ai_queries_used,
-      limit: usage.ai_queries_limit
-    },
-    {
-      label: 'Documents',
-      used: usage.documents_uploaded,
-      limit: usage.documents_limit
-    },
-    {
-      label: 'Team Seats',
-      used: usage.seats_used,
-      limit: usage.seats_limit
-    }
+    { label: 'AI Queries',  used: usage.ai_queries_used,    limit: usage.ai_queries_limit,    icon: icons[0] },
+    { label: 'Documents',   used: usage.documents_uploaded,  limit: usage.documents_limit,     icon: icons[1] },
+    { label: 'Team Seats',  used: usage.seats_used,          limit: usage.seats_limit,         icon: icons[2] },
   ];
 
   const warn = usage.warnings.length > 0;
@@ -39,44 +31,52 @@ const UsageMeters: React.FC<Props> = ({ usage, onUpgradeClick }) => {
   return (
     <div className="space-y-4">
       {warn && (
-        <div className="glass border-amber-500/30 bg-amber-950/40 text-amber-100 px-4 py-3 rounded-2xl text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <div className="font-semibold">You&apos;re approaching your plan limits.</div>
-            <ul className="mt-1 text-xs space-y-0.5">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-amber-800">Approaching plan limits</p>
+            <ul className="mt-1 space-y-0.5">
               {usage.warnings.map((w) => (
-                <li key={w}>{w}</li>
+                <li key={w} className="text-xs text-amber-700">{w}</li>
               ))}
             </ul>
           </div>
           {onUpgradeClick && (
-            <button
-              onClick={onUpgradeClick}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-gradient-to-r from-brand-indigo to-brand-violet text-xs font-semibold shadow-md"
-            >
-              Upgrade plan
+            <button onClick={onUpgradeClick} className="btn-primary whitespace-nowrap text-xs py-2 px-3">
+              Upgrade plan <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {items.map((item) => {
-          const { label, used, limit } = item;
-          const pct = !limit || limit === 0 ? 0 : Math.min(used / limit, 1) * 100;
+        {items.map(({ label, used, limit, icon: Icon }) => {
+          const pct = !limit ? 0 : Math.min(used / limit, 1) * 100;
+          const color = meterColor(used, limit);
           return (
-            <div key={label} className="glass rounded-2xl px-4 py-3">
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="text-slate-300">{label}</span>
-                <span className="font-semibold text-slate-100">
+            <div key={label} className="card px-4 py-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Icon className="w-4 h-4 text-slate-400" />
+                  {label}
+                </div>
+                <span className="text-sm font-semibold text-slate-900">
                   {used}
-                  {limit ? ` / ${limit}` : ' • ∞'}
+                  <span className="text-slate-400 font-normal">
+                    {limit ? ` / ${limit}` : ' / ∞'}
+                  </span>
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-slate-900/80 overflow-hidden">
+              <div className="progress-bar">
                 <div
-                  className={`h-full rounded-full transition-all ${meterColor(used, limit)}`}
+                  className={`progress-fill ${color}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>
+              {limit && (
+                <p className="mt-2 text-xs text-slate-400">
+                  {Math.round(pct)}% of limit used
+                </p>
+              )}
             </div>
           );
         })}
@@ -86,4 +86,3 @@ const UsageMeters: React.FC<Props> = ({ usage, onUpgradeClick }) => {
 };
 
 export default UsageMeters;
-

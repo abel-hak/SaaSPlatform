@@ -156,6 +156,21 @@ class ConversationListResponse(BaseModel):
     conversations: list[ConversationItem]
 
 
+class MessageItem(BaseModel):
+    id: UUID
+    role: Literal["user", "assistant"]
+    content: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ConversationMessagesResponse(BaseModel):
+    conversation_id: UUID
+    messages: list[MessageItem]
+
+
 class AuditLogItem(BaseModel):
     id: int
     org_id: UUID

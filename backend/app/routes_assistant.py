@@ -42,6 +42,38 @@ def list_conversations(
     return schemas.ConversationListResponse(conversations=convs)
 
 
+@router.get("/conversations/{conversation_id}/messages", response_model=schemas.ConversationMessagesResponse)
+def get_conversation_messages(
+    conversation_id: UUID,
+    db: Session = Depends(get_db),
+    org: Organization = Depends(get_current_org),
+    user: User = Depends(get_current_user),
+):
+    plan: PlanName = org.plan  # type: ignore[assignment]
+    limits = get_plan_limits(plan)
+    if not limits["conversation_history"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Conversation history is not available on your current plan.",
+        )
+    conv = db.query(Conversation).filter(
+        Conversation.id == conversation_id,
+        Conversation.org_id == org.id,
+    ).first()
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    msgs = (
+        db.query(Message)
+        .filter(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.asc())
+        .all()
+    )
+    return schemas.ConversationMessagesResponse(
+        conversation_id=conversation_id,
+        messages=msgs,
+    )
+
+
 @router.post("/chat", response_class=EventSourceResponse, responses={429: {"model": schemas.ErrorResponse}})
 async def chat(
     payload: schemas.ChatRequest,
