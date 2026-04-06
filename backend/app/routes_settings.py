@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-
+from . import schemas
 from .audit import log_audit_event
 from .db import get_db
 from .dependencies import get_current_org, get_current_user, require_role
@@ -31,6 +31,24 @@ def update_org(
     org.name = payload.name
     db.commit()
     log_audit_event(db, org.id, user.id, "org_updated", {"name": payload.name})
+    return {"status": "ok"}
+
+@router.patch("/org/ai-prefs", response_model=dict, dependencies=[Depends(require_role("owner", "admin"))])
+def update_ai_prefs(
+    payload: schemas.UpdateAIPrefsRequest,
+    db: Session = Depends(get_db),
+    org: Organization = Depends(get_current_org),
+    user: User = Depends(get_current_user),
+):
+    # Only update the AI key if the user actually typed a new one, else keep the existing
+    org.ai_provider = payload.ai_provider
+    if payload.ai_model:
+        org.ai_model = payload.ai_model
+    if payload.ai_api_key and payload.ai_api_key.strip():
+        org.ai_api_key = payload.ai_api_key.strip()
+
+    db.commit()
+    log_audit_event(db, org.id, user.id, "ai_prefs_updated", {"provider": payload.ai_provider})
     return {"status": "ok"}
 
 
