@@ -90,26 +90,29 @@ def query_context(
     query: str,
     top_k: int = 5,
 ) -> Tuple[str, list[dict[str, Any]]]:
-    """Query ChromaDB for relevant context. Returns empty result if collection has no documents."""
+    """Query ChromaDB for relevant context. Returns formatted context with citation indices."""
     collection = get_org_collection(org_id)
     try:
-        # ChromaDB raises an exception if the collection is empty
         result = collection.query(query_texts=[query], n_results=top_k)
     except Exception as exc:
-        logger.debug("ChromaDB query returned no results (collection may be empty): %s", exc)
+        logger.debug("ChromaDB query returned no results: %s", exc)
         return "", []
+        
     docs = result.get("documents", [[]])[0]
     metadatas = result.get("metadatas", [[]])[0]
+    
     context_parts: List[str] = []
     sources: list[dict[str, Any]] = []
-    for doc, meta in zip(docs, metadatas):
-        context_parts.append(doc)
-        sources.append(
-            {
-                "filename": meta.get("filename"),
-                "chunk_index": meta.get("chunk_index"),
-            }
-        )
+    
+    for i, (doc, meta) in enumerate(zip(docs, metadatas), start=1):
+        filename = meta.get("filename", "Unknown")
+        context_parts.append(f"[Source {i}] {filename}:\n{doc}")
+        sources.append({
+            "idx": i,
+            "filename": filename,
+            "chunk_index": meta.get("chunk_index"),
+        })
+        
     context = "\n\n".join(context_parts)
     return context, sources
 
@@ -118,6 +121,7 @@ def build_prompt(question: str, context: str) -> str:
     system = (
         "You are an AI assistant for a SaaS platform. "
         "Answer the user's question using ONLY the provided context. "
+        "If you use information from the context, you MUST cite the source using its index directly in the text, e.g. [Source 1]. "
         "If the context does not contain the answer, say you are not sure."
     )
     prompt = f"{system}\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
@@ -127,21 +131,87 @@ def build_prompt(question: str, context: str) -> str:
 async def stream_chat_completion(
     org_plan: PlanName,
     prompt: str,
+    ai_provider: str = "groq",
+    ai_model: str | None = None,
+    ai_api_key: str | None = None,
 ) -> AsyncGenerator[str, None]:
-    """Stream chat completion from Groq without blocking the event loop."""
+    """Stream chat completion supporting multi-model and BYOK via HTTPx."""
     plan_config = get_plan_limits(org_plan)
-    model = plan_config["model"]
-    # Run the blocking Groq SDK call in a thread pool so the event loop stays free
-    stream = await asyncio.to_thread(
-        groq_client.chat.completions.create,
-        model=model,
-        stream=True,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    for chunk in stream:
-        delta = chunk.choices[0].delta
-        if delta and delta.content:
-            yield delta.content
+    
+    # Use org specific model if defined, otherwise grab from plan/defaults
+    model = (ai_model and ai_model.strip()) or plan_config.get("model", "llama3-8b-8192")
+    
+    if ai_provider == "openai":
+        import httpx
+        import json
+        api_key = (ai_api_key and ai_api_key.strip())
+        if not api_key:
+            yield "Configure an OpenAI API key in Organization Settings to use OpenAI."
+            return
+            
+        async with httpx.AsyncClient() as client:
+            async with client.stream(
+                "POST", 
+                "https://api.openai.com/v1/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={"model": model, "messages": [{"role": "user", "content": prompt}], "stream": True}
+            ) as response:
+                if response.status_code != 200:
+                    yield f"OpenAI Error: {response.status_code} - Check your API key or model name."
+                    return
+                async for line in response.aiter_lines():
+                    if line.startswith("data: ") and line != "data: [DONE]":
+                        try:
+                            data = json.loads(line[6:])
+                            delta = data["choices"][0].get("delta", {}).get("content", "")
+                            if delta:
+                                yield delta
+                        except Exception:
+                            pass
+                            
+    elif ai_provider == "anthropic":
+        import httpx
+        import json
+        api_key = (ai_api_key and ai_api_key.strip())
+        if not api_key:
+            yield "Configure an Anthropic API key in Organization Settings to use Anthropic."
+            return
+            
+        async with httpx.AsyncClient() as client:
+            async with client.stream(
+                "POST", 
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": api_key, "anthropic-version": "2023-06-01"},
+                json={"model": model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 1024, "stream": True}
+            ) as response:
+                if response.status_code != 200:
+                    yield f"Anthropic Error: {response.status_code} - Check your API key or model name."
+                    return
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        try:
+                            data = json.loads(line[6:])
+                            if data.get("type") == "content_block_delta":
+                                delta = data.get("delta", {}).get("text", "")
+                                if delta:
+                                    yield delta
+                        except Exception:
+                            pass
+                            
+    else:
+        # Default Groq provider
+        api_key = (ai_api_key and ai_api_key.strip()) or settings.groq_api_key
+        client = Groq(api_key=api_key)
+        stream = await asyncio.to_thread(
+            client.chat.completions.create,
+            model=model,
+            stream=True,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta and delta.content:
+                yield delta.content
 
 
 async def sse_chat_response(generator: AsyncGenerator[str, None]) -> EventSourceResponse:
