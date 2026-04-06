@@ -122,6 +122,7 @@ def build_prompt(question: str, context: str) -> str:
         "You are an AI assistant for a SaaS platform. "
         "Answer the user's question using ONLY the provided context. "
         "If you use information from the context, you MUST cite the source using its index directly in the text, e.g. [Source 1]. "
+        "Format your answer beautifully: use bullet points for lists, bold text for emphasis, and use frequent paragraph breaks so it is highly readable! "
         "If the context does not contain the answer, say you are not sure."
     )
     prompt = f"{system}\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"

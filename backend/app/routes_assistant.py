@@ -138,15 +138,19 @@ async def chat(
         "ai_query",
         {"conversation_id": str(conv_id) if conv_id else None},
     )
+    # Capture ORM variables explicitly to prevent DetachedInstanceError
+    _ai_provider = org.ai_provider
+    _ai_model = org.ai_model
+    _ai_api_key = org.ai_api_key
 
     async def token_stream():
         answer_parts: list[str] = []
         async for token in stream_chat_completion(
             org_plan=plan,
             prompt=prompt,
-            ai_provider=org.ai_provider,
-            ai_model=org.ai_model,
-            ai_api_key=org.ai_api_key,
+            ai_provider=_ai_provider,
+            ai_model=_ai_model,
+            ai_api_key=_ai_api_key,
         ):
             answer_parts.append(token)
             yield token

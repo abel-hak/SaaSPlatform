@@ -17,10 +17,11 @@ interface ChatMessage {
   error?: boolean;
 }
 const renderMessageWithCitations = (content: string) => {
-  const parts = content.split(/(\[Source \d+\])/g);
+  // Catch both [Source 1] and [Source1]
+  const parts = content.split(/(\[Source\s*\d+\])/gi);
   return parts.map((part, i) => {
-    if (part.match(/^\[Source \d+\]$/)) {
-      const num = part.replace('[Source ', '').replace(']', '');
+    if (part.match(/^\[Source\s*\d+\]$/i)) {
+      const num = part.replace(/\[Source\s*/i, '').replace(']', '').trim();
       return (
         <span key={i} className="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 text-[10px] font-bold leading-none text-brand-700 bg-brand-100/80 rounded select-none shadow-sm border border-brand-200 align-text-bottom" title={`Source Document ${num}`}>
           {num}
