@@ -3,17 +3,14 @@ import { Link } from 'react-router-dom';
 
 const NotFoundPage: React.FC = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 px-4">
-      <div className="glass rounded-3xl p-6 max-w-sm w-full text-center space-y-3">
-        <div className="text-5xl font-semibold">404</div>
-        <div className="text-sm font-semibold">Page not found</div>
-        <p className="text-xs text-slate-400">
-          The page you&apos;re looking for doesn&apos;t exist. It may have been moved or deleted.
+    <div className="min-h-screen flex items-center justify-center bg-surface-page dark:bg-[#212121] px-4">
+      <div className="card p-8 max-w-sm w-full text-center space-y-4 animate-fade-in">
+        <div className="text-5xl font-bold text-slate-900 dark:text-white">404</div>
+        <div className="text-base font-semibold text-slate-700 dark:text-[#d4d4d4]">Page not found</div>
+        <p className="text-sm text-slate-500 dark:text-[#9a9a9a]">
+          The page you're looking for doesn't exist. It may have been moved or deleted.
         </p>
-        <Link
-          to="/"
-          className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-brand-indigo to-brand-violet text-xs font-semibold px-4 py-1.5"
-        >
+        <Link to="/" className="btn-primary inline-flex text-sm py-2 px-5">
           Back to home
         </Link>
       </div>
@@ -22,4 +19,3 @@ const NotFoundPage: React.FC = () => {
 };
 
 export default NotFoundPage;
-

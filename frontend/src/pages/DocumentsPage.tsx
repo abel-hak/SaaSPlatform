@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { UploadCloud, Trash2, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { UploadCloud, Trash2, FileText, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
 
@@ -12,26 +12,26 @@ interface DocumentItem {
   created_at: string;
 }
 
-const statusBadge = (status: string) => {
-  if (status === 'ready')    return 'badge-success';
-  if (status === 'failed')   return 'badge badge-neutral !bg-red-50 !text-red-600 !ring-red-200';
-  return 'badge-warn';
-};
-
 const DocumentsPage: React.FC = () => {
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [atLimit, setAtLimit] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     try {
       const res = await api.get<{ documents: DocumentItem[] }>('/documents/');
       setDocs(res.data.documents);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const onDrop = async (files: FileList | null) => {
     if (!files || files.length === 0 || atLimit) return;
@@ -44,7 +44,7 @@ const DocumentsPage: React.FC = () => {
         validateStatus: () => true,
       });
       if (res.status === 202) {
-        toast.success('Document uploaded — indexing in background.');
+        toast.success('Document uploaded. Indexing in background.');
         await load();
       } else if (res.status === 429) {
         setAtLimit(true);
@@ -59,17 +59,8 @@ const DocumentsPage: React.FC = () => {
     }
   };
 
-  const openFilePicker = () => {
-    if (atLimit) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.txt,.md,.pdf,.py,.js,.ts,.csv';
-    input.onchange = () => onDrop(input.files);
-    input.click();
-  };
-
   const remove = async (id: string) => {
-    if (!confirm('Delete this document and its vectors?')) return;
+    if (!confirm('Delete this document?')) return;
     try {
       await api.delete(`/documents/${id}`);
       toast.success('Document deleted');
@@ -79,68 +70,59 @@ const DocumentsPage: React.FC = () => {
     }
   };
 
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case 'ready':
+        return 'badge-success';
+      case 'failed':
+        return 'badge-danger';
+      default:
+        return 'badge-warn';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="page-header">
         <div>
           <h1 className="page-title">Documents</h1>
-          <p className="page-subtitle">Upload and manage files. We index them for AI retrieval.</p>
+          <p className="page-subtitle">Upload PDFs, markdown, and text. We'll index them for retrieval.</p>
         </div>
-        <button
-          onClick={openFilePicker}
-          disabled={atLimit || uploading}
-          className="btn-primary text-sm"
-        >
-          {uploading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
-          ) : (
-            <><UploadCloud className="w-4 h-4" /> Upload file</>
-          )}
-        </button>
       </div>
 
-      {/* Drop zone */}
+      {/* Upload area */}
       <div
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && openFilePicker()}
-        onClick={openFilePicker}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
+        className={`card px-6 py-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+          atLimit
+            ? 'border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10'
+            : 'border-dashed hover:border-brand-300 dark:hover:border-brand-700 hover:bg-brand-50/30 dark:hover:bg-brand-900/10'
+        }`}
+        onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
-          setIsDragging(false);
           onDrop(e.dataTransfer.files);
         }}
-        className={`rounded-xl border-2 border-dashed flex flex-col items-center justify-center py-12 gap-3 transition-colors cursor-pointer select-none
-          ${atLimit
-            ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/15 cursor-not-allowed'
-            : isDragging
-              ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20'
-              : 'border-surface-border dark:border-[#424242] bg-surface-subtle dark:bg-[#2f2f2f] hover:border-brand-400 hover:bg-brand-50/30 dark:hover:bg-[#383838]'
-          }`}
+        onClick={() => {
+          if (atLimit) return;
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.onchange = () => onDrop(input.files);
+          input.click();
+        }}
       >
-        {atLimit ? (
+        {uploading ? (
+          <div className="animate-pulse text-sm text-slate-500">Uploading…</div>
+        ) : atLimit ? (
           <>
-            <AlertCircle className="w-6 h-6 text-red-400" />
-            <div className="text-center">
-              <p className="text-sm font-semibold text-red-700">Upload limit reached</p>
-              <p className="text-xs text-red-500 mt-0.5">Upgrade your plan to upload more documents.</p>
-            </div>
+            <AlertCircle className="w-6 h-6 text-red-400 mb-2" />
+            <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">Upload limit reached</p>
+            <p className="text-xs text-slate-500 dark:text-[#8e8e8e]">Upgrade your plan for more uploads.</p>
           </>
         ) : (
           <>
-            <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-colors ${isDragging ? 'bg-brand-100 dark:bg-brand-900/30' : 'bg-surface-card dark:bg-[#383838] border border-surface-border dark:border-[#424242]'}`}>
-              <UploadCloud className={`w-5 h-5 ${isDragging ? 'text-brand-600' : 'text-slate-400'}`} />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-slate-700 dark:text-white">
-                {isDragging ? 'Drop to upload' : 'Drag & drop or click to upload'}
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                PDF, Markdown, TXT, Python, JS, TS, CSV — max 10 MB
-              </p>
-            </div>
+            <UploadCloud className="w-6 h-6 text-slate-400 mb-2" />
+            <p className="text-sm font-medium text-slate-700 dark:text-white mb-1">Drag & drop or click to upload</p>
+            <p className="text-xs text-slate-500 dark:text-[#8e8e8e]">Content is indexed securely per tenant.</p>
           </>
         )}
       </div>
@@ -153,49 +135,52 @@ const DocumentsPage: React.FC = () => {
               <th className="table-head">Name</th>
               <th className="table-head">Size</th>
               <th className="table-head">Status</th>
-              <th className="table-head hidden md:table-cell">Uploaded</th>
+              <th className="table-head hidden md:table-cell">Created</th>
               <th className="table-head text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {docs.map((d) => (
-              <tr key={d.id} className="table-row">
-                <td className="table-cell">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-surface-subtle dark:bg-[#383838] border border-surface-border dark:border-[#424242] flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-3.5 h-3.5 text-slate-400" />
-                    </div>
-                    <span className="font-medium text-slate-800 dark:text-white text-sm">{d.filename}</span>
-                  </div>
-                </td>
-                <td className="table-cell text-slate-500 text-xs">
-                  {d.size_bytes < 1024
-                    ? `${d.size_bytes} B`
-                    : d.size_bytes < 1024 * 1024
-                    ? `${(d.size_bytes / 1024).toFixed(1)} KB`
-                    : `${(d.size_bytes / 1024 / 1024).toFixed(1)} MB`}
-                </td>
-                <td className="table-cell">
-                  <span className={statusBadge(d.status)}>{d.status}</span>
-                </td>
-                <td className="table-cell hidden md:table-cell text-slate-500 text-xs">
-                  {new Date(d.created_at).toLocaleDateString()}
-                </td>
-                <td className="table-cell text-right">
-                  <button
-                    onClick={() => remove(d.id)}
-                    className="btn-ghost text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {docs.length === 0 && (
+            {loading
+              ? [1, 2, 3].map((i) => (
+                  <tr key={i} className="table-row">
+                    <td className="table-cell"><div className="skeleton h-4 w-32" /></td>
+                    <td className="table-cell"><div className="skeleton h-4 w-16" /></td>
+                    <td className="table-cell"><div className="skeleton h-4 w-16" /></td>
+                    <td className="table-cell hidden md:table-cell"><div className="skeleton h-4 w-24" /></td>
+                    <td className="table-cell" />
+                  </tr>
+                ))
+              : docs.map((d) => (
+                  <tr key={d.id} className="table-row">
+                    <td className="table-cell">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <span className="text-slate-800 dark:text-white font-medium">{d.filename}</span>
+                      </div>
+                    </td>
+                    <td className="table-cell text-slate-500">{(d.size_bytes / 1024).toFixed(1)} KB</td>
+                    <td className="table-cell">
+                      <span className={statusBadge(d.status)}>{d.status}</span>
+                    </td>
+                    <td className="table-cell hidden md:table-cell text-slate-500 text-xs">
+                      {new Date(d.created_at).toLocaleString()}
+                    </td>
+                    <td className="table-cell text-right">
+                      <button
+                        onClick={() => remove(d.id)}
+                        className="btn-ghost !p-1.5 text-slate-400 hover:text-red-500"
+                        aria-label={`Delete ${d.filename}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            {!loading && docs.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-16 text-center">
-                  <FileText className="w-6 h-6 text-slate-300 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">No documents yet. Upload your first file above.</p>
+                <td colSpan={5} className="py-12 text-center">
+                  <FileText className="w-5 h-5 text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm text-slate-400 dark:text-[#8e8e8e]">No documents yet. Upload one to get started.</p>
                 </td>
               </tr>
             )}

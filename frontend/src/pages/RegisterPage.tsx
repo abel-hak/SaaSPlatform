@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { Loader2, CheckCircle2 } from 'lucide-react';
-
-const perks = [
-  'AI assistant grounded in your own documents',
-  'Unlimited team members on Enterprise',
-  'SOC 2 compliant infrastructure',
-  'Start free — no credit card required',
-];
 
 const RegisterPage: React.FC = () => {
   const { login } = useAuth();
@@ -26,10 +19,10 @@ const RegisterPage: React.FC = () => {
     try {
       const res = await api.post('/auth/register', { org_name: orgName, email, password });
       await login(res.data.access_token, res.data.refresh_token);
-      toast.success('Workspace created — welcome!');
+      toast.success('Workspace created');
       navigate('/app');
     } catch (err: any) {
-      toast.error(err.response?.data?.detail ?? 'Unable to create workspace');
+      toast.error(err.response?.data?.detail ?? 'Unable to register');
     } finally {
       setLoading(false);
     }
@@ -37,48 +30,52 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-page flex">
-      {/* Left panel */}
+      {/* Left decorative panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-brand-600 flex-col justify-between p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(99,102,241,0.4)_0%,_transparent_60%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(99,102,241,0.4)_0%,_transparent_60%)] pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9"/>
-                <circle cx="9" cy="9" r="2.5" fill="white"/>
+                <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9" />
+                <circle cx="9" cy="9" r="2.5" fill="white" />
               </svg>
             </div>
             <span className="text-white font-semibold text-lg">Aurora Workspace</span>
           </div>
         </div>
-        <div className="relative space-y-8">
-          <h2 className="text-white text-2xl font-bold leading-snug">
-            Your AI-powered<br/>knowledge base
-          </h2>
-          <ul className="space-y-3">
-            {perks.map((perk) => (
-              <li key={perk} className="flex items-start gap-2.5 text-white/85 text-sm">
-                <CheckCircle2 className="w-4 h-4 text-white mt-0.5 flex-shrink-0" />
-                {perk}
-              </li>
-            ))}
-          </ul>
+        <div className="relative space-y-6">
+          <blockquote className="text-white/90 text-xl font-medium leading-relaxed">
+            "We set up our entire AI workspace in under 5 minutes. Documents indexed, team invited, assistant ready."
+          </blockquote>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm">
+              SK
+            </div>
+            <div>
+              <div className="text-white font-medium text-sm">Sarah Kim</div>
+              <div className="text-white/60 text-xs">CTO, Nexus Labs</div>
+            </div>
+          </div>
         </div>
-        <div className="relative text-white/50 text-xs">
-          © {new Date().getFullYear()} Aurora Workspace
+        <div className="relative flex gap-2">
+          {['Free tier', 'No credit card', 'SOC 2'].map((label) => (
+            <span key={label} className="px-2.5 py-1 rounded-full bg-white/10 text-white/80 text-xs font-medium">
+              {label}
+            </span>
+          ))}
         </div>
       </div>
 
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm animate-fade-in">
-
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center">
               <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9"/>
-                <circle cx="9" cy="9" r="2.5" fill="white"/>
+                <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9" />
+                <circle cx="9" cy="9" r="2.5" fill="white" />
               </svg>
             </div>
             <span className="font-semibold text-slate-900">Aurora Workspace</span>
@@ -86,7 +83,7 @@ const RegisterPage: React.FC = () => {
 
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-slate-900">Create your workspace</h1>
-            <p className="mt-1.5 text-sm text-slate-500">Free for small teams. No credit card required.</p>
+            <p className="mt-1.5 text-sm text-slate-500">Free for individuals and small teams.</p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
@@ -131,32 +128,30 @@ const RegisterPage: React.FC = () => {
                 type="password"
                 required
                 autoComplete="new-password"
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="8+ characters"
-                minLength={8}
                 className="input"
               />
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Creating workspace…</>
-              ) : 'Create free workspace'}
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Creating workspace…
+                </>
+              ) : (
+                'Create workspace'
+              )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-500">
             Already have an account?{' '}
             <Link to="/login" className="text-brand-600 hover:text-brand-700 font-medium">
-              Sign in
+              Log in
             </Link>
-          </p>
-
-          <p className="mt-4 text-center text-xs text-slate-400">
-            By creating an account you agree to our{' '}
-            <span className="underline cursor-pointer hover:text-slate-600">Terms</span> and{' '}
-            <span className="underline cursor-pointer hover:text-slate-600">Privacy Policy</span>.
           </p>
         </div>
       </div>

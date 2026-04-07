@@ -1,51 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { CreditCard, ExternalLink } from 'lucide-react';
 import { api, UsageMetrics, UsageResponse } from '../lib/api';
 import { usePlan } from '../context/AuthContext';
 import UsageMeters from '../components/UsageMeters';
-import { Check, Zap, Briefcase, Building2, Loader2 } from 'lucide-react';
-
-interface PlanCard {
-  key: 'free' | 'pro' | 'enterprise';
-  name: string;
-  price: string;
-  period: string;
-  description: string;
-  features: string[];
-  icon: React.ElementType;
-  highlight?: boolean;
-}
-
-const plans: PlanCard[] = [
-  {
-    key: 'free',
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    description: 'Perfect for individuals and small experiments.',
-    icon: Zap,
-    features: ['5 AI queries / month', '10 documents', '1 team seat', 'Community support'],
-  },
-  {
-    key: 'pro',
-    name: 'Pro',
-    price: '$29',
-    period: 'per month',
-    description: 'For growing teams that need higher limits and history.',
-    icon: Briefcase,
-    highlight: true,
-    features: ['500 AI queries / month', '100 documents', '10 team seats', 'Audit log', 'Priority support'],
-  },
-  {
-    key: 'enterprise',
-    name: 'Enterprise',
-    price: '$99',
-    period: 'per month',
-    description: 'Unlimited usage for large organisations.',
-    icon: Building2,
-    features: ['Unlimited AI queries', 'Unlimited documents', 'Unlimited seats', 'Audit log', 'Dedicated support', 'SLA guarantees'],
-  },
-];
 
 const BillingPage: React.FC = () => {
   const plan = usePlan();
@@ -77,97 +35,112 @@ const BillingPage: React.FC = () => {
     }
   };
 
+  const planLabel = plan === 'enterprise' ? 'Enterprise' : plan === 'pro' ? 'Pro' : 'Free';
+  const planBadge = plan === 'enterprise' || plan === 'pro' ? 'badge-brand' : 'badge-neutral';
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="page-header">
         <div>
           <h1 className="page-title">Billing</h1>
           <p className="page-subtitle">Manage your subscription, limits, and invoices.</p>
         </div>
-        {plan !== 'free' && (
-          <button onClick={openPortal} className="btn-secondary text-xs py-2">
-            Manage payment method
-          </button>
-        )}
       </div>
 
-      {/* Usage section */}
-      <section>
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-[#d4d4d4] mb-3">Usage this month</h2>
-        <UsageMeters usage={usage} />
-      </section>
-
-      {/* Plan cards */}
-      <section>
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-[#d4d4d4] mb-4">Plans</h2>
-        <div className="grid md:grid-cols-3 gap-4">
-          {plans.map((p) => {
-            const isCurrent = plan === p.key;
-            return (
-              <div
-                key={p.key}
-                className={`card p-5 flex flex-col relative ${
-                  p.highlight
-                    ? 'ring-2 ring-brand-600 shadow-card-hover'
-                    : ''
-                }`}
-              >
-                {p.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="badge-brand px-3 py-1 text-xs font-semibold shadow-sm">Most popular</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2 mb-4">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${p.highlight ? 'bg-brand-600 text-white' : 'bg-surface-subtle dark:bg-[#383838] text-slate-500 dark:text-[#8e8e8e]'}`}>
-                    <p.icon className="w-4 h-4" />
-                  </div>
-                  <span className="font-semibold text-slate-800 dark:text-white">{p.name}</span>
-                  {isCurrent && <span className="badge-success ml-auto">Current</span>}
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-slate-900 dark:text-white">{p.price}</span>
-                    <span className="text-sm text-slate-400 dark:text-[#8e8e8e]">{p.period}</span>
-                  </div>
-                  <p className="mt-1.5 text-xs text-slate-500 dark:text-[#9a9a9a]">{p.description}</p>
-                </div>
-
-                <ul className="space-y-2 flex-1 mb-6">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-slate-700 dark:text-[#d4d4d4]">
-                      <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                {p.key === 'free' ? (
-                  <button disabled className="btn-secondary w-full text-xs cursor-not-allowed opacity-60">
-                    {isCurrent ? 'Current plan' : 'Downgrade'}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => createCheckout(p.key as 'pro' | 'enterprise')}
-                    disabled={loading || isCurrent}
-                    className={`w-full text-xs ${p.highlight ? 'btn-primary' : 'btn-secondary'}`}
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : isCurrent ? (
-                      'Current plan'
-                    ) : (
-                      `Switch to ${p.name}`
-                    )}
-                  </button>
-                )}
-              </div>
-            );
-          })}
+      {/* Current plan */}
+      <div className="card p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <CreditCard className="w-4 h-4 text-slate-400" />
+              <span className="text-xs font-medium text-slate-500 dark:text-[#8e8e8e] uppercase tracking-wide">
+                Current plan
+              </span>
+            </div>
+            <div className="text-xl font-semibold text-slate-900 dark:text-white">{planLabel}</div>
+            <p className="text-sm text-slate-500 dark:text-[#9a9a9a] mt-1">
+              {plan === 'free'
+                ? 'You are on the Free plan with limited usage.'
+                : plan === 'pro'
+                ? 'Pro plan — higher limits and conversation history.'
+                : 'Enterprise plan — unlimited usage and priority support.'}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => createCheckout('pro')}
+              disabled={loading || plan === 'pro'}
+              className="btn-primary text-sm py-2 px-4"
+            >
+              {plan === 'pro' ? 'On Pro' : 'Upgrade to Pro'}
+            </button>
+            <button
+              onClick={() => createCheckout('enterprise')}
+              disabled={loading || plan === 'enterprise'}
+              className="btn-secondary text-sm py-2 px-4"
+            >
+              {plan === 'enterprise' ? 'On Enterprise' : 'Upgrade to Enterprise'}
+            </button>
+            <button onClick={openPortal} className="btn-ghost text-sm py-2 px-3">
+              Payment method <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-      </section>
+      </div>
+
+      {/* Plan comparison */}
+      <div className="grid md:grid-cols-3 gap-4">
+        {[
+          {
+            name: 'Free',
+            price: '$0',
+            desc: 'For individuals trying Aurora.',
+            features: ['1 user', '50 AI queries / month', '5 document uploads', 'No conversation history'],
+            current: plan === 'free',
+          },
+          {
+            name: 'Pro',
+            price: '$29',
+            desc: 'For growing teams.',
+            features: ['Up to 5 users', '500 AI queries / month', 'Unlimited documents', 'Full conversation history', 'Audit log'],
+            current: plan === 'pro',
+            recommended: true,
+          },
+          {
+            name: 'Enterprise',
+            price: '$99',
+            desc: 'For scale and control.',
+            features: ['Unlimited users & queries', 'Priority queue (faster model)', 'Full audit log', 'Dedicated support'],
+            current: plan === 'enterprise',
+          },
+        ].map((p) => (
+          <div
+            key={p.name}
+            className={`card p-5 flex flex-col ${
+              p.recommended ? 'ring-2 ring-brand-500 dark:ring-brand-400' : ''
+            } ${p.current ? 'bg-brand-50/50 dark:bg-brand-900/10' : ''}`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-slate-900 dark:text-white">{p.name}</span>
+              {p.recommended && <span className="badge-success text-2xs">Recommended</span>}
+              {p.current && <span className="badge-brand text-2xs">Current</span>}
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">{p.price}<span className="text-sm font-normal text-slate-500">/mo</span></div>
+            <p className="text-xs text-slate-500 dark:text-[#8e8e8e] mt-1 mb-4">{p.desc}</p>
+            <ul className="space-y-1.5 text-sm text-slate-600 dark:text-[#d4d4d4] flex-1">
+              {p.features.map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {/* Usage */}
+      <UsageMeters usage={usage} onUpgradeClick={() => createCheckout('pro')} />
     </div>
   );
 };

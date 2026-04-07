@@ -5,7 +5,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif']
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         brand: {
@@ -25,37 +25,32 @@ module.exports = {
           card:   '#ffffff',
           subtle: '#f0f2f8',
           border: '#e4e7ef',
-        }
+        },
       },
       boxShadow: {
-        card:   '0 1px 3px 0 rgba(16,24,40,0.08), 0 1px 2px -1px rgba(16,24,40,0.06)',
+        card:      '0 1px 3px 0 rgba(16,24,40,0.08), 0 1px 2px -1px rgba(16,24,40,0.06)',
         'card-hover': '0 4px 12px 0 rgba(16,24,40,0.10), 0 2px 6px -1px rgba(16,24,40,0.06)',
-        input:  '0 0 0 3px rgba(79,70,229,0.12)',
-        dialog: '0 24px 48px -12px rgba(16,24,40,0.22)',
+        input:     '0 0 0 3px rgba(79,70,229,0.12)',
+        dialog:    '0 24px 48px -12px rgba(16,24,40,0.22)',
       },
       fontSize: {
         '2xs': ['10px', '14px'],
       },
-      borderRadius: {
-        xl2: '14px',
-      },
       keyframes: {
         'fade-in': {
-          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '0%':   { opacity: '0', transform: 'translateY(6px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'slide-in': {
-          '0%': { opacity: '0', transform: 'translateX(-8px)' },
+          '0%':   { opacity: '0', transform: 'translateX(-8px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
       },
       animation: {
-        'fade-in': 'fade-in 0.18s ease-out both',
+        'fade-in':  'fade-in 0.18s ease-out both',
         'slide-in': 'slide-in 0.18s ease-out both',
-      }
-    }
+      },
+    },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ]
+  plugins: [require('@tailwindcss/typography')],
 };

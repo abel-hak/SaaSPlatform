@@ -19,8 +19,8 @@ const ProtectedLayout: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="glass px-6 py-4 rounded-xl text-sm text-slate-300">Loading workspace…</div>
+      <div className="min-h-screen flex items-center justify-center bg-surface-page dark:bg-[#212121]">
+        <div className="card px-6 py-4 text-sm text-slate-500 dark:text-[#9a9a9a] animate-pulse">Loading workspace…</div>
       </div>
     );
   }
