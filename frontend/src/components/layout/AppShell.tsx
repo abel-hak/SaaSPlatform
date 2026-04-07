@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import {
   Menu, X, MessageCircle, FileText, Users, CreditCard,
-  Settings, Activity, LayoutDashboard, LogOut
+  Settings, Activity, LayoutDashboard, LogOut, Sun, Moon
 } from 'lucide-react';
 import { useAuth, usePlan } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 interface NavItem {
   to: string;
@@ -17,6 +18,7 @@ interface NavItem {
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { me, logout } = useAuth();
   const plan = usePlan();
+  const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAuditEnabled = plan === 'pro' || plan === 'enterprise';
@@ -69,13 +71,13 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 
   return (
-    <div className="min-h-screen bg-surface-page flex">
+    <div className="min-h-screen bg-surface-page dark:bg-[#0f1117] flex">
 
       {/* ── Desktop Sidebar ── */}
-      <aside className="hidden md:flex w-60 flex-col bg-surface-card border-r border-surface-border fixed inset-y-0 z-20">
+      <aside className="hidden md:flex w-60 flex-col bg-surface-card dark:bg-[#1a1d27] border-r border-surface-border dark:border-[#2e3347] fixed inset-y-0 z-20">
 
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-surface-border flex-shrink-0">
+        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-surface-border dark:border-[#2e3347] flex-shrink-0">
           <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9"/>
@@ -83,21 +85,32 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </svg>
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-slate-900 truncate">Aurora</div>
-            <div className="text-xs text-slate-400 truncate">{me?.organization.name}</div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">Aurora</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 truncate">{me?.organization.name}</div>
           </div>
         </div>
 
         <SidebarNav />
 
         {/* User footer */}
-        <div className="px-3 pb-4 pt-2 border-t border-surface-border flex-shrink-0">
+        <div className="px-3 pb-4 pt-2 border-t border-surface-border dark:border-[#2e3347] flex-shrink-0">
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggle}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="w-full flex items-center gap-2.5 px-3 py-2 mb-1 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-surface-subtle dark:hover:bg-[#22263a] hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-150"
+          >
+            {theme === 'dark'
+              ? <Sun className="w-4 h-4 flex-shrink-0" />
+              : <Moon className="w-4 h-4 flex-shrink-0" />}
+            <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+          </button>
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg group">
-            <div className="h-8 w-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+            <div className="h-8 w-8 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-semibold flex-shrink-0">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-medium text-slate-800 truncate">{me?.user.email}</div>
+              <div className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{me?.user.email}</div>
               <div className="flex items-center gap-1 mt-0.5">
                 <span className="text-xs text-slate-400 capitalize">{me?.user.role}</span>
                 <span className={`${planBadge} text-[10px] px-1.5 py-0`}>{planLabel}</span>
@@ -106,7 +119,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <button
               onClick={logout}
               title="Log out"
-              className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-surface-subtle transition-all"
+              className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-surface-subtle dark:hover:bg-[#22263a] transition-all"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -115,7 +128,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </aside>
 
       {/* ── Mobile Top Bar ── */}
-      <header className="md:hidden fixed inset-x-0 top-0 z-30 h-14 flex items-center justify-between px-4 bg-surface-card border-b border-surface-border">
+      <header className="md:hidden fixed inset-x-0 top-0 z-30 h-14 flex items-center justify-between px-4 bg-surface-card dark:bg-[#1a1d27] border-b border-surface-border dark:border-[#2e3347]">
         <Link to="/app" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -123,14 +136,22 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <circle cx="9" cy="9" r="2.5" fill="white"/>
             </svg>
           </div>
-          <span className="text-sm font-semibold text-slate-900">Aurora</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Aurora</span>
         </Link>
-        <button
-          className="p-2 rounded-lg text-slate-600 hover:bg-surface-subtle transition-colors"
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggle}
+            className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-surface-subtle dark:hover:bg-[#22263a] transition-colors"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <button
+            className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-surface-subtle dark:hover:bg-[#22263a] transition-colors"
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </header>
 
       {/* ── Mobile Drawer ── */}
