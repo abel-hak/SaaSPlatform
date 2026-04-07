@@ -44,7 +44,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           return (
             <div
               key={item.to}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 cursor-not-allowed select-none"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 dark:text-[#666] cursor-not-allowed select-none"
             >
               <item.icon className="w-4 h-4 flex-shrink-0" />
               <span>{item.label}</span>
@@ -71,13 +71,13 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 
   return (
-    <div className="min-h-screen bg-surface-page dark:bg-[#0f1117] flex">
+    <div className="min-h-screen bg-surface-page dark:bg-[#212121] flex">
 
       {/* ── Desktop Sidebar ── */}
-      <aside className="hidden md:flex w-60 flex-col bg-surface-card dark:bg-[#1a1d27] border-r border-surface-border dark:border-[#2e3347] fixed inset-y-0 z-20">
+      <aside className="hidden md:flex w-60 flex-col bg-surface-card dark:bg-[#171717] border-r border-surface-border dark:border-[#2f2f2f] fixed inset-y-0 z-20">
 
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-surface-border dark:border-[#2e3347] flex-shrink-0">
+        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-surface-border dark:border-[#2f2f2f] flex-shrink-0">
           <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" fillOpacity="0.9"/>
@@ -85,20 +85,20 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </svg>
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">Aurora</div>
-            <div className="text-xs text-slate-400 dark:text-slate-500 truncate">{me?.organization.name}</div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">Aurora</div>
+            <div className="text-xs text-slate-400 dark:text-[#8e8e8e] truncate">{me?.organization.name}</div>
           </div>
         </div>
 
         <SidebarNav />
 
         {/* User footer */}
-        <div className="px-3 pb-4 pt-2 border-t border-surface-border dark:border-[#2e3347] flex-shrink-0">
+        <div className="px-3 pb-4 pt-2 border-t border-surface-border dark:border-[#2f2f2f] flex-shrink-0">
           {/* Dark mode toggle */}
           <button
             onClick={toggle}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="w-full flex items-center gap-2.5 px-3 py-2 mb-1 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-surface-subtle dark:hover:bg-[#22263a] hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-150"
+            className="w-full flex items-center gap-2.5 px-3 py-2 mb-1 rounded-lg text-sm font-medium text-slate-500 dark:text-[#b0b0b0] hover:bg-surface-subtle dark:hover:bg-[#2f2f2f] hover:text-slate-800 dark:hover:text-white transition-all duration-150"
           >
             {theme === 'dark'
               ? <Sun className="w-4 h-4 flex-shrink-0" />
@@ -106,20 +106,20 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
           </button>
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg group">
-            <div className="h-8 w-8 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+            <div className="h-8 w-8 rounded-full bg-brand-100 dark:bg-[#383838] text-brand-700 dark:text-[#a5b4fc] flex items-center justify-center text-xs font-semibold flex-shrink-0">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{me?.user.email}</div>
+              <div className="text-xs font-medium text-slate-800 dark:text-[#e0e0e0] truncate">{me?.user.email}</div>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-xs text-slate-400 capitalize">{me?.user.role}</span>
+                <span className="text-xs text-slate-400 dark:text-[#8e8e8e] capitalize">{me?.user.role}</span>
                 <span className={`${planBadge} text-[10px] px-1.5 py-0`}>{planLabel}</span>
               </div>
             </div>
             <button
               onClick={logout}
               title="Log out"
-              className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-surface-subtle dark:hover:bg-[#22263a] transition-all"
+              className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-surface-subtle dark:hover:bg-[#383838] transition-all"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -128,7 +128,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </aside>
 
       {/* ── Mobile Top Bar ── */}
-      <header className="md:hidden fixed inset-x-0 top-0 z-30 h-14 flex items-center justify-between px-4 bg-surface-card dark:bg-[#1a1d27] border-b border-surface-border dark:border-[#2e3347]">
+      <header className="md:hidden fixed inset-x-0 top-0 z-30 h-14 flex items-center justify-between px-4 bg-surface-card dark:bg-[#171717] border-b border-surface-border dark:border-[#2f2f2f]">
         <Link to="/app" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -136,17 +136,17 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <circle cx="9" cy="9" r="2.5" fill="white"/>
             </svg>
           </div>
-          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Aurora</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">Aurora</span>
         </Link>
         <div className="flex items-center gap-1">
           <button
             onClick={toggle}
-            className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-surface-subtle dark:hover:bg-[#22263a] transition-colors"
+            className="p-2 rounded-lg text-slate-500 dark:text-[#b0b0b0] hover:bg-surface-subtle dark:hover:bg-[#2f2f2f] transition-colors"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
           <button
-            className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-surface-subtle dark:hover:bg-[#22263a] transition-colors"
+            className="p-2 rounded-lg text-slate-600 dark:text-[#d4d4d4] hover:bg-surface-subtle dark:hover:bg-[#2f2f2f] transition-colors"
             onClick={() => setMobileOpen((v) => !v)}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -161,14 +161,14 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           onClick={() => setMobileOpen(false)}
         >
           <div
-            className="absolute top-14 left-0 right-0 bottom-0 bg-surface-card border-t border-surface-border p-3 overflow-y-auto animate-fade-in"
+            className="absolute top-14 left-0 right-0 bottom-0 bg-surface-card dark:bg-[#171717] border-t border-surface-border dark:border-[#2f2f2f] p-3 overflow-y-auto animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
             <SidebarNav />
-            <div className="mt-2 pt-3 border-t border-surface-border">
+            <div className="mt-2 pt-3 border-t border-surface-border dark:border-[#2f2f2f]">
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
-                className="nav-item w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="nav-item w-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-[#2f2f2f] hover:text-red-700"
               >
                 <LogOut className="w-4 h-4" />
                 Log out
