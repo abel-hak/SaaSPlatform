@@ -84,11 +84,11 @@ const SettingsPage: React.FC = () => {
       <section className="card p-6 space-y-4">
         <div className="flex items-center gap-2 mb-1">
           <Building2 className="w-4 h-4 text-slate-400" />
-          <h2 className="text-sm font-semibold text-slate-800">Organization</h2>
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Organization</h2>
         </div>
-        <div className="h-px bg-surface-border" />
+        <div className="h-px bg-surface-border dark:bg-[#424242]" />
         <div>
-          <label htmlFor="org-name" className="block text-sm font-medium text-slate-700 mb-1.5">
+          <label htmlFor="org-name" className="block text-sm font-medium text-slate-700 dark:text-[#d4d4d4] mb-1.5">
             Name
           </label>
           <input
@@ -98,7 +98,7 @@ const SettingsPage: React.FC = () => {
             onChange={(e) => setOrgName(e.target.value)}
             className="input max-w-sm"
           />
-          <p className="mt-1.5 text-xs text-slate-400">
+          <p className="mt-1.5 text-xs text-slate-400 dark:text-[#8e8e8e]">
             This is the display name for your organization across Aurora.
           </p>
         </div>
@@ -114,16 +114,16 @@ const SettingsPage: React.FC = () => {
       <section className="card p-6 space-y-4">
         <div className="flex items-center gap-2 mb-1">
           <Building2 className="w-4 h-4 text-brand-500" />
-          <h2 className="text-sm font-semibold text-slate-800">AI Provider (Bring Your Own Key)</h2>
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-white">AI Provider (Bring Your Own Key)</h2>
         </div>
-        <div className="h-px bg-surface-border" />
+        <div className="h-px bg-surface-border dark:bg-[#424242]" />
         <div className="space-y-4 max-w-sm">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Provider</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-[#d4d4d4] mb-1.5">Provider</label>
             <select
               value={aiProvider}
               onChange={(e) => setAiProvider(e.target.value as any)}
-              className="input bg-white"
+              className="input bg-white dark:bg-[#383838]"
             >
               <option value="groq">Groq (Default, Llama 3 Fast)</option>
               <option value="openai">OpenAI (GPT-4o, GPT-3.5)</option>
@@ -131,7 +131,7 @@ const SettingsPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Model Name (Optional)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-[#d4d4d4] mb-1.5">Model Name (Optional)</label>
             <input
               type="text"
               value={aiModel}
@@ -139,10 +139,10 @@ const SettingsPage: React.FC = () => {
               className="input"
               placeholder={aiProvider === 'openai' ? 'gpt-4o' : aiProvider === 'anthropic' ? 'claude-3-5-sonnet-20240620' : 'llama3-8b-8192'}
             />
-            <p className="mt-1 text-xs text-slate-400">Leave blank to use default workspace model.</p>
+            <p className="mt-1 text-xs text-slate-400 dark:text-[#8e8e8e]">Leave blank to use default workspace model.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">API Key (Optional)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-[#d4d4d4] mb-1.5">API Key (Optional)</label>
             <input
               type="password"
               value={aiApiKey}
@@ -150,7 +150,7 @@ const SettingsPage: React.FC = () => {
               className="input font-mono text-xs"
               placeholder="sk-..."
             />
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-400 dark:text-[#8e8e8e]">
               Paste your own API key to bypass workspace usage limits. Keys are stored safely.
             </p>
           </div>
@@ -167,12 +167,12 @@ const SettingsPage: React.FC = () => {
       <section className="card p-6 space-y-4">
         <div className="flex items-center gap-2 mb-1">
           <Lock className="w-4 h-4 text-slate-400" />
-          <h2 className="text-sm font-semibold text-slate-800">Change password</h2>
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Change password</h2>
         </div>
-        <div className="h-px bg-surface-border" />
+        <div className="h-px bg-surface-border dark:bg-[#424242]" />
         <div className="space-y-3 max-w-sm">
           <div>
-            <label htmlFor="current-pw" className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label htmlFor="current-pw" className="block text-sm font-medium text-slate-700 dark:text-[#d4d4d4] mb-1.5">
               Current password
             </label>
             <input
@@ -185,7 +185,7 @@ const SettingsPage: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="new-pw" className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label htmlFor="new-pw" className="block text-sm font-medium text-slate-700 dark:text-[#d4d4d4] mb-1.5">
               New password
             </label>
             <input
@@ -207,22 +207,22 @@ const SettingsPage: React.FC = () => {
       </section>
 
       {/* Danger zone */}
-      <section className="card p-6 space-y-4 border-red-200 bg-red-50/50">
+      <section className="card p-6 space-y-4 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10">
         <div className="flex items-center gap-2 mb-1">
           <AlertTriangle className="w-4 h-4 text-red-500" />
-          <h2 className="text-sm font-semibold text-red-700">Danger zone</h2>
+          <h2 className="text-sm font-semibold text-red-700 dark:text-red-400">Danger zone</h2>
         </div>
-        <div className="h-px bg-red-100" />
+        <div className="h-px bg-red-100 dark:bg-red-900/30" />
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-slate-800">Delete organization</p>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-sm font-medium text-slate-800 dark:text-white">Delete organization</p>
+            <p className="text-xs text-slate-500 dark:text-[#9a9a9a] mt-0.5">
               Permanently deletes all documents, conversations, billing records, and team members. This cannot be undone.
             </p>
           </div>
           <button
             onClick={deleteOrg}
-            className="btn-secondary border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 text-xs py-2 px-4 whitespace-nowrap flex-shrink-0"
+            className="btn-secondary border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-400 text-xs py-2 px-4 whitespace-nowrap flex-shrink-0"
           >
             Delete organization
           </button>

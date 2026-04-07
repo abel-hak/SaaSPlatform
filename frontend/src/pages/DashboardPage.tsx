@@ -50,7 +50,7 @@ const DashboardPage: React.FC = () => {
       {/* Header */}
       <div className="page-header">
         <div>
-          <p className="text-sm text-slate-500 mb-1">Welcome back</p>
+          <p className="text-sm text-slate-500 dark:text-[#9a9a9a] mb-1">Welcome back</p>
           <h1 className="page-title">{me?.organization.name}</h1>
         </div>
         <div className="flex items-center gap-2">
@@ -70,13 +70,13 @@ const DashboardPage: React.FC = () => {
 
       {/* Usage */}
       <section>
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">Usage this month</h2>
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-[#d4d4d4] mb-3">Usage this month</h2>
         <UsageMeters usage={usage} onUpgradeClick={() => navigate('/app/billing')} />
       </section>
 
       {/* Quick actions */}
       <section>
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">Quick actions</h2>
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-[#d4d4d4] mb-3">Quick actions</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {quickActions.map((action) => (
             <button
@@ -84,12 +84,12 @@ const DashboardPage: React.FC = () => {
               onClick={() => navigate(action.to)}
               className="card p-4 text-left flex items-start gap-3 hover:shadow-card-hover transition-shadow group"
             >
-              <div className={`h-9 w-9 rounded-lg ${action.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+              <div className={`h-9 w-9 rounded-lg ${action.bg} dark:bg-[#383838] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                 <action.icon className={`w-4.5 h-4.5 ${action.color}`} />
               </div>
               <div>
-                <div className="text-sm font-semibold text-slate-800 mb-0.5">{action.title}</div>
-                <div className="text-xs text-slate-500 leading-relaxed">{action.description}</div>
+                <div className="text-sm font-semibold text-slate-800 dark:text-white mb-0.5">{action.title}</div>
+                <div className="text-xs text-slate-500 dark:text-[#9a9a9a] leading-relaxed">{action.description}</div>
               </div>
             </button>
           ))}

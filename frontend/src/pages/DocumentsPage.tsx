@@ -114,10 +114,10 @@ const DocumentsPage: React.FC = () => {
         }}
         className={`rounded-xl border-2 border-dashed flex flex-col items-center justify-center py-12 gap-3 transition-colors cursor-pointer select-none
           ${atLimit
-            ? 'border-red-200 bg-red-50 cursor-not-allowed'
+            ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/15 cursor-not-allowed'
             : isDragging
-              ? 'border-brand-500 bg-brand-50'
-              : 'border-surface-border bg-surface-subtle hover:border-brand-400 hover:bg-brand-50/30'
+              ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20'
+              : 'border-surface-border dark:border-[#424242] bg-surface-subtle dark:bg-[#2f2f2f] hover:border-brand-400 hover:bg-brand-50/30 dark:hover:bg-[#383838]'
           }`}
       >
         {atLimit ? (
@@ -130,11 +130,11 @@ const DocumentsPage: React.FC = () => {
           </>
         ) : (
           <>
-            <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-colors ${isDragging ? 'bg-brand-100' : 'bg-surface-card border border-surface-border'}`}>
+            <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-colors ${isDragging ? 'bg-brand-100 dark:bg-brand-900/30' : 'bg-surface-card dark:bg-[#383838] border border-surface-border dark:border-[#424242]'}`}>
               <UploadCloud className={`w-5 h-5 ${isDragging ? 'text-brand-600' : 'text-slate-400'}`} />
             </div>
             <div className="text-center">
-              <p className="text-sm font-semibold text-slate-700">
+              <p className="text-sm font-semibold text-slate-700 dark:text-white">
                 {isDragging ? 'Drop to upload' : 'Drag & drop or click to upload'}
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -149,7 +149,7 @@ const DocumentsPage: React.FC = () => {
       <div className="card overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="bg-surface-subtle border-b border-surface-border">
+            <tr className="bg-surface-subtle dark:bg-[#2f2f2f] border-b border-surface-border dark:border-[#424242]">
               <th className="table-head">Name</th>
               <th className="table-head">Size</th>
               <th className="table-head">Status</th>
@@ -162,10 +162,10 @@ const DocumentsPage: React.FC = () => {
               <tr key={d.id} className="table-row">
                 <td className="table-cell">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-surface-subtle border border-surface-border flex items-center justify-center flex-shrink-0">
+                    <div className="h-8 w-8 rounded-lg bg-surface-subtle dark:bg-[#383838] border border-surface-border dark:border-[#424242] flex items-center justify-center flex-shrink-0">
                       <FileText className="w-3.5 h-3.5 text-slate-400" />
                     </div>
-                    <span className="font-medium text-slate-800 text-sm">{d.filename}</span>
+                    <span className="font-medium text-slate-800 dark:text-white text-sm">{d.filename}</span>
                   </div>
                 </td>
                 <td className="table-cell text-slate-500 text-xs">
@@ -184,7 +184,7 @@ const DocumentsPage: React.FC = () => {
                 <td className="table-cell text-right">
                   <button
                     onClick={() => remove(d.id)}
-                    className="btn-ghost text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg"
+                    className="btn-ghost text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

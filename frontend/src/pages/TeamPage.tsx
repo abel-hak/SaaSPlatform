@@ -119,10 +119,10 @@ const TeamPage: React.FC = () => {
 
       {/* Seat limit warning */}
       {atSeatLimit && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-amber-800">Seat limit reached</p>
-            <p className="text-xs text-amber-700 mt-0.5">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Seat limit reached</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
               You're at {data?.seats_used} / {data?.seats_limit} seats. Upgrade your plan to invite more members.
             </p>
           </div>
@@ -133,7 +133,7 @@ const TeamPage: React.FC = () => {
       <div className="card overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="bg-surface-subtle border-b border-surface-border">
+            <tr className="bg-surface-subtle dark:bg-[#2f2f2f] border-b border-surface-border dark:border-[#424242]">
               <th className="table-head">Member</th>
               <th className="table-head">Role</th>
               <th className="table-head hidden md:table-cell">Joined</th>
@@ -147,11 +147,11 @@ const TeamPage: React.FC = () => {
                 <tr key={m.id} className="table-row">
                   <td className="table-cell">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                      <div className="h-8 w-8 rounded-full bg-brand-100 dark:bg-[#383838] text-brand-700 dark:text-[#a5b4fc] flex items-center justify-center text-xs font-semibold flex-shrink-0">
                         {m.email[0]?.toUpperCase()}
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-slate-800">{m.email}</div>
+                        <div className="text-sm font-medium text-slate-800 dark:text-white">{m.email}</div>
                         {isMe && <div className="text-xs text-slate-400">You</div>}
                       </div>
                     </div>
@@ -181,7 +181,7 @@ const TeamPage: React.FC = () => {
                       {!isMe && (
                         <button
                           onClick={() => remove(m.id)}
-                          className="btn-ghost text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg"
+                          className="btn-ghost text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -206,9 +206,9 @@ const TeamPage: React.FC = () => {
       {/* Invite modal */}
       {inviteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-surface-card rounded-2xl shadow-dialog p-6 animate-fade-in">
+          <div className="w-full max-w-sm bg-surface-card dark:bg-[#2f2f2f] rounded-2xl shadow-dialog p-6 animate-fade-in">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-slate-900">Invite team member</h2>
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">Invite team member</h2>
               <button
                 onClick={() => setInviteOpen(false)}
                 className="btn-ghost p-1.5 rounded-lg text-slate-400"
@@ -234,7 +234,7 @@ const TeamPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="invite-role" className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label htmlFor="invite-role" className="block text-sm font-medium text-slate-700 dark:text-[#d4d4d4] mb-1.5">
                   Role
                 </label>
                 <select

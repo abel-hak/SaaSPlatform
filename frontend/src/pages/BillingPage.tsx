@@ -94,13 +94,13 @@ const BillingPage: React.FC = () => {
 
       {/* Usage section */}
       <section>
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">Usage this month</h2>
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-[#d4d4d4] mb-3">Usage this month</h2>
         <UsageMeters usage={usage} />
       </section>
 
       {/* Plan cards */}
       <section>
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Plans</h2>
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-[#d4d4d4] mb-4">Plans</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {plans.map((p) => {
             const isCurrent = plan === p.key;
@@ -120,24 +120,24 @@ const BillingPage: React.FC = () => {
                 )}
 
                 <div className="flex items-center gap-2 mb-4">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${p.highlight ? 'bg-brand-600 text-white' : 'bg-surface-subtle text-slate-500'}`}>
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${p.highlight ? 'bg-brand-600 text-white' : 'bg-surface-subtle dark:bg-[#383838] text-slate-500 dark:text-[#8e8e8e]'}`}>
                     <p.icon className="w-4 h-4" />
                   </div>
-                  <span className="font-semibold text-slate-800">{p.name}</span>
+                  <span className="font-semibold text-slate-800 dark:text-white">{p.name}</span>
                   {isCurrent && <span className="badge-success ml-auto">Current</span>}
                 </div>
 
                 <div className="mb-4">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-slate-900">{p.price}</span>
-                    <span className="text-sm text-slate-400">{p.period}</span>
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">{p.price}</span>
+                    <span className="text-sm text-slate-400 dark:text-[#8e8e8e]">{p.period}</span>
                   </div>
-                  <p className="mt-1.5 text-xs text-slate-500">{p.description}</p>
+                  <p className="mt-1.5 text-xs text-slate-500 dark:text-[#9a9a9a]">{p.description}</p>
                 </div>
 
                 <ul className="space-y-2 flex-1 mb-6">
                   {p.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
+                    <li key={f} className="flex items-center gap-2 text-sm text-slate-700 dark:text-[#d4d4d4]">
                       <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
                       {f}
                     </li>

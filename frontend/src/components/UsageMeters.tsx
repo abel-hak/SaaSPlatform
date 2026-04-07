@@ -31,12 +31,12 @@ const UsageMeters: React.FC<Props> = ({ usage, onUpgradeClick }) => {
   return (
     <div className="space-y-4">
       {warn && (
-        <div className="flex flex-col md:flex-row md:items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-amber-800">Approaching plan limits</p>
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Approaching plan limits</p>
             <ul className="mt-1 space-y-0.5">
               {usage.warnings.map((w) => (
-                <li key={w} className="text-xs text-amber-700">{w}</li>
+                <li key={w} className="text-xs text-amber-700 dark:text-amber-400">{w}</li>
               ))}
             </ul>
           </div>
@@ -55,13 +55,13 @@ const UsageMeters: React.FC<Props> = ({ usage, onUpgradeClick }) => {
           return (
             <div key={label} className="card px-4 py-4">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Icon className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-[#d4d4d4]">
+                  <Icon className="w-4 h-4 text-slate-400 dark:text-[#8e8e8e]" />
                   {label}
                 </div>
-                <span className="text-sm font-semibold text-slate-900">
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">
                   {used}
-                  <span className="text-slate-400 font-normal">
+                  <span className="text-slate-400 dark:text-[#8e8e8e] font-normal">
                     {limit ? ` / ${limit}` : ' / ∞'}
                   </span>
                 </span>
@@ -73,7 +73,7 @@ const UsageMeters: React.FC<Props> = ({ usage, onUpgradeClick }) => {
                 />
               </div>
               {limit && (
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-slate-400 dark:text-[#8e8e8e]">
                   {Math.round(pct)}% of limit used
                 </p>
               )}
