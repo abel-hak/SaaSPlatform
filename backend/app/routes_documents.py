@@ -195,6 +195,35 @@ def get_document_status(
     return schemas.DocumentStatusResponse(id=doc.id, status=doc.status)
 
 
+@router.get("/{document_id}/chunks", response_model=schemas.DocumentChunksResponse)
+def get_document_chunks(
+    document_id: UUID,
+    db: Session = Depends(get_db),
+    org: Organization = Depends(get_current_org),
+    user: User = Depends(get_current_user),
+):
+    doc = db.query(Document).filter(Document.id == document_id, Document.org_id == org.id).first()
+    if not doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+    if doc.status != "ready":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Document is not yet indexed")
+
+    collection = get_org_collection(org.id)
+    all_data = collection.get(
+        ids=[f"{document_id}_{i}" for i in range(doc.chunk_count)],
+        include=["documents", "metadatas"],
+    )
+    chunks = []
+    for i, (text, meta) in enumerate(zip(all_data.get("documents", []), all_data.get("metadatas", []))):
+        chunks.append(schemas.DocumentChunk(
+            chunk_index=meta.get("chunk_index", i) if meta else i,
+            content=text or "",
+            filename=meta.get("filename", doc.filename) if meta else doc.filename,
+        ))
+    chunks.sort(key=lambda c: c.chunk_index)
+    return schemas.DocumentChunksResponse(document_id=doc.id, filename=doc.filename, chunks=chunks)
+
+
 @router.delete("/{document_id}", status_code=204)
 def delete_document(
     document_id: UUID,

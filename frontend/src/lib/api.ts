@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: false
+  withCredentials: false,
 });
 
 api.interceptors.request.use((config) => {
@@ -42,37 +42,4 @@ api.interceptors.response.use(
   }
 );
 
-export type PlanName = 'free' | 'pro' | 'enterprise';
-
-export interface MeResponse {
-  user: {
-    id: string;
-    email: string;
-    role: string;
-  };
-  organization: {
-    id: string;
-    name: string;
-    slug: string;
-    plan: PlanName;
-    ai_provider: 'groq' | 'openai' | 'anthropic';
-    ai_model: string | null;
-    ai_api_key: string | null;
-  };
-}
-
-export interface UsageMetrics {
-  period: string;
-  ai_queries_used: number;
-  ai_queries_limit: number | null;
-  documents_uploaded: number;
-  documents_limit: number | null;
-  seats_used: number;
-  seats_limit: number | null;
-  warnings: string[];
-}
-
-export interface UsageResponse {
-  usage: UsageMetrics;
-}
-
+export type { PlanName, MeResponse, UsageMetrics, UsageResponse, DocumentItem, Member, MemberListResponse, Conversation, ChatMessage } from './types';

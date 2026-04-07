@@ -1,24 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { UploadCloud, Trash2, FileText, AlertCircle } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { UploadCloud, Trash2, FileText, AlertCircle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
+import type { DocumentItem } from '../lib/types';
+import PageHeader from '../components/PageHeader';
+import ConfirmDialog from '../components/ConfirmDialog';
+import EmptyState from '../components/EmptyState';
+import DocumentViewer from '../components/DocumentViewer';
 
-interface DocumentItem {
-  id: string;
-  filename: string;
-  size_bytes: number;
-  status: string;
-  chunk_count: number;
-  created_at: string;
-}
+const POLL_INTERVAL = 4000;
 
 const DocumentsPage: React.FC = () => {
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [atLimit, setAtLimit] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<DocumentItem | null>(null);
+  const [viewTarget, setViewTarget] = useState<DocumentItem | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await api.get<{ documents: DocumentItem[] }>('/documents/');
       setDocs(res.data.documents);
@@ -27,11 +28,26 @@ const DocumentsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
+
+  /* Poll while any document is still processing */
+  useEffect(() => {
+    const hasProcessing = docs.some((d) => d.status === 'processing' || d.status === 'pending');
+    if (hasProcessing && !pollRef.current) {
+      pollRef.current = setInterval(load, POLL_INTERVAL);
+    }
+    if (!hasProcessing && pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [docs, load]);
 
   const onDrop = async (files: FileList | null) => {
     if (!files || files.length === 0 || atLimit) return;
@@ -59,13 +75,18 @@ const DocumentsPage: React.FC = () => {
     }
   };
 
-  const remove = async (id: string) => {
-    if (!confirm('Delete this document?')) return;
+  /* Optimistic delete */
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    const previous = [...docs];
+    setDocs((prev) => prev.filter((d) => d.id !== id));
+    setDeleteTarget(null);
     try {
       await api.delete(`/documents/${id}`);
       toast.success('Document deleted');
-      await load();
     } catch {
+      setDocs(previous);
       toast.error('Unable to delete document');
     }
   };
@@ -81,14 +102,22 @@ const DocumentsPage: React.FC = () => {
     }
   };
 
+  const processingCount = docs.filter((d) => d.status === 'processing' || d.status === 'pending').length;
+
   return (
     <div className="space-y-6">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Documents</h1>
-          <p className="page-subtitle">Upload PDFs, markdown, and text. We'll index them for retrieval.</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Documents"
+        subtitle="Upload PDFs, markdown, and text. We'll index them for retrieval."
+        actions={
+          processingCount > 0 ? (
+            <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              {processingCount} processing…
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* Upload area */}
       <div
@@ -153,10 +182,14 @@ const DocumentsPage: React.FC = () => {
               : docs.map((d) => (
                   <tr key={d.id} className="table-row">
                     <td className="table-cell">
-                      <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => d.status === 'ready' && setViewTarget(d)}
+                        className={`flex items-center gap-2 text-left ${d.status === 'ready' ? 'hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer' : ''}`}
+                        disabled={d.status !== 'ready'}
+                      >
                         <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <span className="text-slate-800 dark:text-white font-medium">{d.filename}</span>
-                      </div>
+                      </button>
                     </td>
                     <td className="table-cell text-slate-500">{(d.size_bytes / 1024).toFixed(1)} KB</td>
                     <td className="table-cell">
@@ -167,7 +200,7 @@ const DocumentsPage: React.FC = () => {
                     </td>
                     <td className="table-cell text-right">
                       <button
-                        onClick={() => remove(d.id)}
+                        onClick={() => setDeleteTarget(d)}
                         className="btn-ghost !p-1.5 text-slate-400 hover:text-red-500"
                         aria-label={`Delete ${d.filename}`}
                       >
@@ -178,15 +211,32 @@ const DocumentsPage: React.FC = () => {
                 ))}
             {!loading && docs.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-12 text-center">
-                  <FileText className="w-5 h-5 text-slate-300 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400 dark:text-[#8e8e8e]">No documents yet. Upload one to get started.</p>
+                <td colSpan={5}>
+                  <EmptyState icon={FileText} title="No documents yet" description="Upload one to get started." />
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {viewTarget && (
+        <DocumentViewer
+          documentId={viewTarget.id}
+          filename={viewTarget.filename}
+          onClose={() => setViewTarget(null)}
+        />
+      )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete document"
+        description={`Are you sure you want to delete "${deleteTarget?.filename}"? This will remove all indexed chunks and cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };

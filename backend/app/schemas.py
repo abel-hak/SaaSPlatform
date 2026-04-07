@@ -141,6 +141,18 @@ class DocumentStatusResponse(BaseModel):
     status: str
 
 
+class DocumentChunk(BaseModel):
+    chunk_index: int
+    content: str
+    filename: str
+
+
+class DocumentChunksResponse(BaseModel):
+    document_id: UUID
+    filename: str
+    chunks: list[DocumentChunk]
+
+
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str
