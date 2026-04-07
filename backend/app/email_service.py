@@ -28,7 +28,8 @@ def send_password_reset_email(
     Send a password-reset link to the given email address.
     Replace the body of this function with a real email provider in production.
     """
-    reset_url = f"{frontend_origin}/reset-password?token={token}"
+    origin = str(frontend_origin).rstrip("/")
+    reset_url = f"{origin}/reset-password?token={token}"
     logger.info("[EMAIL] Password reset requested for %s  →  %s", email, reset_url)
     # ── DEV: print to console so developers can test without a mail server ──
     print(
@@ -52,7 +53,8 @@ def send_invite_email(
     Send a team invitation link to the given email address.
     Replace the body of this function with a real email provider in production.
     """
-    invite_url = f"{frontend_origin}/accept-invite?token={token}"
+    origin = str(frontend_origin).rstrip("/")
+    invite_url = f"{origin}/accept-invite?token={token}"
     logger.info("[EMAIL] Invite sent for %s to join %s  →  %s", email, org_name, invite_url)
     # ── DEV: print to console so developers can test without a mail server ──
     print(

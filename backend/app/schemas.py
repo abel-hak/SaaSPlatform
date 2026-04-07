@@ -209,6 +209,18 @@ class AuditLogListResponse(BaseModel):
     total: int
 
 
+class DailyUsagePoint(BaseModel):
+    date: str
+    queries: int
+    documents: int
+
+
+class AnalyticsResponse(BaseModel):
+    daily: list[DailyUsagePoint]
+    total_queries: int
+    total_documents: int
+
+
 class BillingPortalResponse(BaseModel):
     url: str
 

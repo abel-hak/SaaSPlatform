@@ -3,6 +3,7 @@ import { ArrowRight, UploadCloud, MessageCircle, Users, FileText, Loader2 } from
 import { api, UsageMetrics, UsageResponse } from '../lib/api';
 import { useAuth, usePlan } from '../context/AuthContext';
 import UsageMeters from '../components/UsageMeters';
+import UsageChart from '../components/UsageChart';
 import { useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
@@ -107,6 +108,9 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Analytics Chart */}
+      {!loading && !error && <UsageChart />}
 
       {/* Quick Actions */}
       <section className="grid md:grid-cols-3 gap-4">

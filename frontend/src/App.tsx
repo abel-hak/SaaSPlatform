@@ -12,6 +12,9 @@ import BillingPage from './pages/BillingPage';
 import SettingsPage from './pages/SettingsPage';
 import AuditLogPage from './pages/AuditLogPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import AcceptInvitePage from './pages/AcceptInvitePage';
 import AppShell from './components/layout/AppShell';
 
 const ProtectedLayout: React.FC = () => {
@@ -41,6 +44,9 @@ const AppRoutes: React.FC = () => (
     <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
+    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+    <Route path="/reset-password" element={<ResetPasswordPage />} />
+    <Route path="/accept-invite" element={<AcceptInvitePage />} />
 
     <Route path="/app" element={<ProtectedLayout />}>
       <Route index element={<DashboardPage />} />
