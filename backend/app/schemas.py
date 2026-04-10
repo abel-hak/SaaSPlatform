@@ -221,6 +221,33 @@ class AnalyticsResponse(BaseModel):
     total_documents: int
 
 
+class ApiKeyCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class ApiKeyItem(BaseModel):
+    id: UUID
+    name: str
+    key_prefix: str
+    last_used_at: Optional[datetime] = None
+    revoked_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ApiKeyCreatedResponse(BaseModel):
+    id: UUID
+    name: str
+    key: str
+    key_prefix: str
+
+
+class ApiKeyListResponse(BaseModel):
+    keys: list[ApiKeyItem]
+
+
 class BillingPortalResponse(BaseModel):
     url: str
 

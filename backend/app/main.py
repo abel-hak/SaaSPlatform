@@ -13,6 +13,7 @@ from .routes_documents import router as documents_router
 from .routes_assistant import router as assistant_router
 from .routes_billing import router as billing_router
 from .routes_settings import router as settings_router
+from .routes_apikeys import router as apikeys_router
 
 
 settings = get_settings()
@@ -83,6 +84,7 @@ app.include_router(documents_router)
 app.include_router(assistant_router)
 app.include_router(billing_router)
 app.include_router(settings_router)
+app.include_router(apikeys_router)
 
 # Additional routers (organizations, billing, documents, assistant, audit, usage, etc.) are included elsewhere.
 

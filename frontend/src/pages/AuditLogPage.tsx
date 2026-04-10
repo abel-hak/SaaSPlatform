@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import { api, API_BASE_URL } from '../lib/api';
 import { usePlan } from '../context/AuthContext';
-import { Lock, Activity } from 'lucide-react';
+import { useIsAdmin } from '../hooks/useRole';
+import { Lock, Activity, Download, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
+import toast from 'react-hot-toast';
 
 interface AuditLogItem {
   id: number;
@@ -19,23 +22,58 @@ interface AuditLogResponse {
 }
 
 const actionColors: Record<string, string> = {
-  'user.login':       'badge-brand',
-  'user.register':    'badge-success',
-  'document.upload':  'badge-brand',
-  'document.delete':  'badge-warn',
-  'invite.created':   'badge-success',
-  'plan.changed':     'badge-brand',
+  login: 'badge-brand',
+  ai_query: 'badge-brand',
+  document_uploaded: 'badge-success',
+  document_deleted: 'badge-warn',
+  member_invited: 'badge-success',
+  member_removed: 'badge-danger',
+  role_changed: 'badge-warn',
+  org_updated: 'badge-neutral',
+  org_deleted: 'badge-danger',
+  ai_prefs_updated: 'badge-neutral',
+  limit_hit: 'badge-danger',
+  api_key_created: 'badge-success',
+  api_key_revoked: 'badge-warn',
 };
 
 const AuditLogPage: React.FC = () => {
   const plan = usePlan();
+  const isAdmin = useIsAdmin();
   const [data, setData] = useState<AuditLogResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const isEnabled = plan === 'pro' || plan === 'enterprise';
 
   useEffect(() => {
-    if (!isEnabled) return;
-    api.get<AuditLogResponse>('/audit-log/').then((r) => setData(r.data)).catch(() => {});
+    if (!isEnabled) {
+      setLoading(false);
+      return;
+    }
+    api
+      .get<AuditLogResponse>('/audit-log/')
+      .then((r) => setData(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [isEnabled]);
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const res = await api.get('/audit-log/export/csv', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'audit-log.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Audit log exported');
+    } catch {
+      toast.error('Unable to export');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (!isEnabled) {
     return (
@@ -54,9 +92,7 @@ const AuditLogPage: React.FC = () => {
               Upgrade to Pro or Enterprise to track invites, uploads, plan changes, and all user activity.
             </p>
           </div>
-          <Link to="/app/billing" className="btn-primary text-sm py-2 px-5">
-            View plans
-          </Link>
+          <Link to="/app/billing" className="btn-primary text-sm py-2 px-5">View plans</Link>
         </div>
       </div>
     );
@@ -64,15 +100,21 @@ const AuditLogPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Audit Log</h1>
-          <p className="page-subtitle">Review who did what, and when, across your workspace.</p>
-        </div>
-        {data && (
-          <span className="badge-neutral">{data.total} events</span>
-        )}
-      </div>
+      <PageHeader
+        title="Audit Log"
+        subtitle="Review who did what, and when, across your workspace."
+        actions={
+          <div className="flex items-center gap-2">
+            {data && <span className="badge-neutral">{data.total} events</span>}
+            {isAdmin && (
+              <button onClick={() => void exportCsv()} disabled={exporting} className="btn-secondary text-xs py-1.5 px-3 inline-flex items-center gap-1.5">
+                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                Export CSV
+              </button>
+            )}
+          </div>
+        }
+      />
 
       <div className="card overflow-hidden">
         <table className="w-full">
@@ -85,27 +127,36 @@ const AuditLogPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {data?.items.map((item) => (
-              <tr key={item.id} className="table-row">
-                <td className="table-cell text-slate-500 text-xs whitespace-nowrap">
-                  {new Date(item.created_at).toLocaleString()}
-                </td>
-                <td className="table-cell">
-                  <span className={actionColors[item.action] ?? 'badge-neutral'}>
-                    {item.action}
-                  </span>
-                </td>
-                <td className="table-cell hidden md:table-cell text-slate-500 text-xs">
-                  {item.user_id ? <code className="font-mono">{item.user_id.slice(0, 8)}…</code> : '—'}
-                </td>
-                <td className="table-cell hidden lg:table-cell">
-                  <code className="text-xs bg-surface-subtle dark:bg-[#383838] px-2 py-1 rounded text-slate-600 dark:text-[#d4d4d4] block max-w-xs truncate">
-                    {JSON.stringify(item.details ?? {})}
-                  </code>
-                </td>
-              </tr>
-            ))}
-            {(!data || data.items.length === 0) && (
+            {loading
+              ? [1, 2, 3].map((i) => (
+                  <tr key={i} className="table-row">
+                    <td className="table-cell"><div className="skeleton h-4 w-32" /></td>
+                    <td className="table-cell"><div className="skeleton h-4 w-20" /></td>
+                    <td className="table-cell hidden md:table-cell"><div className="skeleton h-4 w-16" /></td>
+                    <td className="table-cell hidden lg:table-cell"><div className="skeleton h-4 w-40" /></td>
+                  </tr>
+                ))
+              : data?.items.map((item) => (
+                  <tr key={item.id} className="table-row">
+                    <td className="table-cell text-slate-500 text-xs whitespace-nowrap">
+                      {new Date(item.created_at).toLocaleString()}
+                    </td>
+                    <td className="table-cell">
+                      <span className={actionColors[item.action] ?? 'badge-neutral'}>
+                        {item.action}
+                      </span>
+                    </td>
+                    <td className="table-cell hidden md:table-cell text-slate-500 text-xs">
+                      {item.user_id ? <code className="font-mono">{item.user_id.slice(0, 8)}…</code> : '—'}
+                    </td>
+                    <td className="table-cell hidden lg:table-cell">
+                      <code className="text-xs bg-surface-subtle dark:bg-[#383838] px-2 py-1 rounded text-slate-600 dark:text-[#d4d4d4] block max-w-xs truncate">
+                        {JSON.stringify(item.details ?? {})}
+                      </code>
+                    </td>
+                  </tr>
+                ))}
+            {!loading && (!data || data.items.length === 0) && (
               <tr>
                 <td colSpan={4} className="py-12 text-center">
                   <Activity className="w-5 h-5 text-slate-300 mx-auto mb-2" />

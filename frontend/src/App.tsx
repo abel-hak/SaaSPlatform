@@ -15,6 +15,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AcceptInvitePage from './pages/AcceptInvitePage';
+import ApiKeysPage from './pages/ApiKeysPage';
 import AppShell from './components/layout/AppShell';
 
 const ProtectedLayout: React.FC = () => {
@@ -55,6 +56,7 @@ const AppRoutes: React.FC = () => (
       <Route path="team" element={<TeamPage />} />
       <Route path="billing" element={<BillingPage />} />
       <Route path="settings" element={<SettingsPage />} />
+      <Route path="api-keys" element={<ApiKeysPage />} />
       <Route path="audit-log" element={<AuditLogPage />} />
     </Route>
 

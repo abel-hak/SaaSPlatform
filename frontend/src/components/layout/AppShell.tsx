@@ -13,25 +13,30 @@ import {
   Moon,
   Sun,
   LogOut,
+  Key,
 } from 'lucide-react';
 import { useAuth, usePlan } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useIsAdmin } from '../../hooks/useRole';
 
-const links = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/app/assistant', label: 'AI Assistant', icon: MessageCircle },
-  { to: '/app/documents', label: 'Documents', icon: FileText },
-  { to: '/app/team', label: 'Team', icon: Users },
-  { to: '/app/billing', label: 'Billing', icon: CreditCard },
-  { to: '/app/settings', label: 'Settings', icon: Settings },
+const allLinks = [
+  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true, adminOnly: false },
+  { to: '/app/assistant', label: 'AI Assistant', icon: MessageCircle, adminOnly: false },
+  { to: '/app/documents', label: 'Documents', icon: FileText, adminOnly: false },
+  { to: '/app/team', label: 'Team', icon: Users, adminOnly: true },
+  { to: '/app/billing', label: 'Billing', icon: CreditCard, adminOnly: true },
+  { to: '/app/settings', label: 'Settings', icon: Settings, adminOnly: false },
+  { to: '/app/api-keys', label: 'API Keys', icon: Key, adminOnly: true },
 ];
 
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { me, logout } = useAuth();
   const plan = usePlan();
   const { theme, toggle } = useTheme();
+  const isAdmin = useIsAdmin();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const links = allLinks.filter((l) => !l.adminOnly || isAdmin);
   const isAuditEnabled = plan === 'pro' || plan === 'enterprise';
   const planLabel = plan === 'enterprise' ? 'Enterprise' : plan === 'pro' ? 'Pro' : 'Free';
   const planBadge =
