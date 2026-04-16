@@ -81,9 +81,9 @@ def require_role(*roles: str):
 
 
 def get_current_period() -> str:
-    from datetime import datetime
+    from datetime import datetime, timezone
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return f"{now.year:04d}-{now.month:02d}"
 
 

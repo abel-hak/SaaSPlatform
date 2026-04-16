@@ -85,6 +85,3 @@ app.include_router(assistant_router)
 app.include_router(billing_router)
 app.include_router(settings_router)
 app.include_router(apikeys_router)
-
-# Additional routers (organizations, billing, documents, assistant, audit, usage, etc.) are included elsewhere.
-

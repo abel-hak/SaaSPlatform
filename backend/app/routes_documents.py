@@ -230,6 +230,11 @@ def delete_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
 
     db.delete(doc)
+
+    # MED-06: decrement usage counter so freed slots can be reused
+    usage = get_usage_for_org(db, org.id)
+    usage.documents_uploaded = max(0, usage.documents_uploaded - 1)
+
     db.commit()
 
     # Bug 6 fix: remove vector embeddings from ChromaDB so deleted docs

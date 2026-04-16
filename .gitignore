@@ -1,4 +1,4 @@
-﻿.venv/
+.venv/
 node_modules/
 .env
 __pycache__/
@@ -6,3 +6,5 @@ __pycache__/
 dist/
 build/
 frontend/.cache/
+chroma_db/
+storage/
