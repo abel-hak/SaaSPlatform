@@ -1,120 +1,267 @@
-## Aurora Workspace – Multi-Tenant AI SaaS
+# Aurora AI Platform
 
-Production-grade multi-tenant SaaS template with FastAPI, PostgreSQL RLS, Redis, Stripe billing, and a polished React + Vite + Tailwind frontend.
+A production-grade, multi-tenant AI SaaS platform. Organizations upload their documents and chat with an AI assistant that answers questions grounded exclusively in their workspace data (RAG).
 
-### Features
+---
 
-- **Multi-tenant architecture** with real PostgreSQL Row-Level Security (RLS)
-- **Auth**: email/password, JWT access/refresh, password reset
-- **Per-tenant AI assistant** using Groq + ChromaDB with streaming responses
-- **Stripe billing**: Free / Pro / Enterprise plans, webhooks, customer portal
-- **Usage meters** and plan-based feature flags across backend + UI
-- **Audit log**, background document indexing, health/readiness endpoints
+## Tech Stack
 
-### Quickstart (Docker Compose)
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | FastAPI (Python 3.11+), SQLAlchemy 2, Alembic |
+| **Database** | PostgreSQL 16 |
+| **Cache / Rate Limiting** | Redis 7 |
+| **Vector Store** | ChromaDB (persistent, per-tenant collections) |
+| **AI / LLM** | Groq (default), OpenAI, Anthropic (BYOK) |
+| **Embeddings** | `sentence-transformers` — `all-MiniLM-L6-v2` |
+| **Billing** | Stripe (Checkout + Customer Portal + Webhooks) |
+| **Frontend** | React 18 + TypeScript + Vite + Tailwind CSS |
+| **Auth** | JWT (access + refresh tokens), bcrypt |
+| **Containerisation** | Docker + Docker Compose |
+
+---
+
+## Features
+
+- **Multi-tenant:** Every organization is fully isolated. Users, documents, conversations, and vector embeddings are scoped to their `org_id`.
+- **RAG (Retrieval-Augmented Generation):** Documents are chunked, embedded, and stored in ChromaDB. Every AI query retrieves the most relevant chunks as context.
+- **BYOK (Bring Your Own Key):** Organization owners can configure their own AI provider (Groq / OpenAI / Anthropic) and API key in Settings.
+- **Conversation History:** Pro and Enterprise plans persist full chat history linked per user and org.
+- **Document Management:** Upload PDF, Markdown, TXT, CSV, Python, JS/TS files (up to 10 MB). Docs are indexed in the background.
+- **Team Management:** Invite members by email, assign roles (Owner / Admin / Member), manage seats.
+- **Plan Enforcement:** Hard limits on AI queries, document uploads, and team seats enforced server-side per plan.
+- **Audit Log:** Every significant action (login, upload, invite, plan change) is logged per org (Pro+).
+- **API Keys:** Generate and revoke API keys for programmatic access.
+- **Dark Mode:** Full ChatGPT-style dark mode with OS preference detection and persistent toggle.
+- **Billing Portal:** Stripe-powered subscription management, plan upgrades, and invoice history.
+
+---
+
+## Plans
+
+| Feature | Free | Pro | Enterprise |
+|---------|------|-----|------------|
+| AI queries / month | 50 | 500 | Unlimited |
+| Documents | 5 | Unlimited | Unlimited |
+| Team seats | 1 | 5 | Unlimited |
+| Conversation history | ❌ | ✅ | ✅ |
+| Audit log | ❌ | ✅ | ✅ |
+| AI model | Llama 3.1 8B | Llama 3.1 8B | Llama 3.3 70B |
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+- Docker + Docker Compose
+
+### 1. Clone & configure
 
 ```bash
+git clone <your-repo-url>
+cd SaaSPlatform
 cp .env.example .env
-# fill in secrets (JWT, Stripe, GROQ_API_KEY, etc.)
-
-docker compose up --build
+# Edit .env with your real secrets (see Environment Variables section below)
 ```
 
-Backend is available on `http://localhost:8000`, frontend on `http://localhost:5173` (after running `npm install && npm run dev` inside `frontend` if you prefer local dev).
+### 2. Start infrastructure (Postgres + Redis)
 
-### Tech Stack
-
-- **Backend**: FastAPI, SQLAlchemy, Alembic, PostgreSQL 16, Redis 7, ChromaDB, Groq SDK, Stripe
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, lucide-react, react-router, react-hot-toast
-- **Infra**: Docker Compose, health/readiness probes, `.env`-driven config
-
-### Architecture Diagram
-
-```text
-                           +----------------------+
-                           |      React App       |
-                           |  Vite + TS + TW      |
-                           +----------+-----------+
-                                      |
-                                      v
-                         HTTPS / JSON + SSE (chat)
-                                      |
-                           +----------+-----------+
-                           |      FastAPI         |
-                           |  Auth, Billing, AI   |
-                           +----------+-----------+
-                                      |
-          +---------------------------+-----------------------------+
-          |                           |                             |
-          v                           v                             v
- +-----------------+        +-------------------+        +-------------------+
- | PostgreSQL 16   |        |   Redis 7         |        |   ChromaDB        |
- | - Orgs / Users  |        | - Rate limiting   |        | - Per-org vectors |
- | - Docs / Msgs   |        | - Queues (future) |        | - RAG context     |
- | - Usage / Audit |        +-------------------+        +-------------------+
- | - RLS policies  |
- +--------+--------+
-          |
-          v
- +-----------------+
- |   Stripe        |
- | - Checkout      |
- | - Webhooks      |
- | - Customer      |
- |   Portal        |
- +-----------------+
+```bash
+docker-compose up postgres redis -d
 ```
 
-### Database Overview
+### 3. Set up the backend
 
-- `organizations`: tenants, Stripe IDs, current plan
-- `users`: per-org users with roles (owner/admin/member)
-- `invites`: email-based invites with tokens
-- `documents`: uploaded docs per org (status, chunk counts)
-- `conversations` & `messages`: chat history (Pro+)
-- `usage`: per-org, per-period usage for AI queries, documents, seats
-- `audit_log`: structured audit trail (invites, plan changes, limits, logins)
-- `stripe_events`: idempotency store for Stripe webhooks
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS/Linux
 
-All tables with `org_id` have **RLS policies** bound to `current_setting('app.current_org_id')`.
+# Install dependencies
+pip install -r requirements.txt
 
-### Backend Endpoints (high level)
+# Run database migrations
+alembic upgrade head
 
-- **Auth**: `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/me`, `/auth/password/reset*`
-- **Team**: `/team/` (list), `/team/invites`, `/team/members/{id}/role`, `/team/members/{id}`
-- **Documents**: `/documents/`, `/documents/upload`, `/documents/{id}/status`, `/documents/{id}`
-- **Assistant**: `/assistant/conversations`, `/assistant/chat` (SSE streaming via `EventSourceResponse`)
-- **Usage**: `/usage/` – current usage, limits, warnings when >= 80%
-- **Audit log**: `/audit-log/` – paginated, filterable (Pro+ only)
-- **Billing**: `/billing/checkout-session`, `/billing/portal`, `/billing/webhook`
-- **Settings**: `/settings/org`, `/settings/profile/password`
-- **Health**: `/health`, `/ready`
+# Start the API server
+uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-### Frontend Highlights
+### 4. Set up the frontend
 
-- **Landing page**: Hero, feature highlights, polished pricing cards with Pro highlighted
-- **Auth**: modern login/register with organization creation
-- **Dashboard**: plan badge, usage meters, soft limit banners, quick actions
-- **AI Assistant**: streaming chat UI, Pro+ conversation list, disabled input on limit hit
-- **Documents**: drag & drop uploader with plan-aware disabling
-- **Team**: seat-aware invite button, roles, removal, upgrade CTAs at limit
-- **Billing**: plan cards wired to Stripe Checkout + Customer Portal
-- **Audit log**: blurred preview on Free, full table on Pro/Enterprise
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-### Environment Variables
+The app runs at **http://localhost:5173**. The API runs at **http://localhost:8000**.
 
-See `.env.example` for a full, documented list:
+---
 
-- **Core**: `APP_NAME`, `APP_ENV`, `APP_HOST`, `APP_PORT`
-- **JWT**: `JWT_SECRET`, `JWT_ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`
-- **Postgres**: `DATABASE_URL`, `POSTGRES_*`
-- **Redis**: `REDIS_URL`
-- **Stripe**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL`
-- **Groq**: `GROQ_API_KEY`
-- **ChromaDB**: `CHROMA_PERSIST_DIRECTORY`
-- **Frontend**: `FRONTEND_ORIGIN`
+## Environment Variables
 
-### License
+Copy `.env.example` to `.env` and fill in each value:
 
-MIT – free to use in your own projects and portfolios.
+```env
+# Application
+APP_NAME="Aurora AI Platform"
+APP_ENV="development"
 
+# JWT — generate a strong secret:  openssl rand -hex 32
+JWT_SECRET="your-secret-here"
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Database (matches docker-compose defaults)
+DATABASE_URL="postgresql+psycopg2://saas_user:saas_password@localhost:5433/saas_db"
+
+# Redis
+REDIS_URL="redis://localhost:6379/0"
+
+# Stripe
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+STRIPE_PRICE_PRO_MONTHLY="price_..."
+STRIPE_PRICE_ENTERPRISE_MONTHLY="price_..."
+STRIPE_CUSTOMER_PORTAL_RETURN_URL="http://localhost:5173/app/billing"
+
+# AI — default provider
+GROQ_API_KEY="gsk_..."
+
+# ChromaDB
+CHROMA_PERSIST_DIRECTORY="chroma_db"
+
+# CORS
+FRONTEND_ORIGIN="http://localhost:5173"
+```
+
+> ⚠️ Never commit your `.env` file. It is already in `.gitignore`.
+
+---
+
+## Database Migrations
+
+This project uses **Alembic** for schema migrations.
+
+```bash
+# Apply all pending migrations
+alembic upgrade head
+
+# Create a new migration after changing models.py
+alembic revision --autogenerate -m "describe your change"
+
+# Rollback one migration
+alembic downgrade -1
+```
+
+---
+
+## API Reference
+
+The FastAPI server auto-generates interactive docs:
+
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
+
+### Key Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/auth/register` | Register a new org + owner account |
+| POST | `/auth/login` | Login, returns access + refresh tokens |
+| POST | `/auth/refresh` | Refresh access token |
+| GET | `/usage/` | Get current month's usage metrics |
+| GET | `/documents/` | List all org documents |
+| POST | `/documents/upload` | Upload and index a document |
+| DELETE | `/documents/{id}` | Delete document + vector embeddings |
+| POST | `/assistant/chat` | Stream AI chat response (SSE) |
+| GET | `/assistant/conversations` | List conversation history (Pro+) |
+| GET | `/team/` | List team members + seats |
+| POST | `/team/invites` | Invite a new member by email |
+| GET | `/audit-log/` | List audit events (Pro+) |
+| POST | `/billing/checkout-session` | Create Stripe checkout |
+| POST | `/billing/webhook` | Stripe webhook receiver |
+| GET | `/billing/portal` | Open Stripe customer portal |
+| GET | `/api-keys/` | List API keys |
+| POST | `/api-keys/` | Create a new API key |
+
+---
+
+## Project Structure
+
+```
+SaaSPlatform/
+├── backend/
+│   └── app/
+│       ├── main.py              # FastAPI app + CORS + middleware
+│       ├── config.py            # Settings + plan limits
+│       ├── models.py            # SQLAlchemy ORM models
+│       ├── schemas.py           # Pydantic request/response schemas
+│       ├── db.py                # Database session factory
+│       ├── security.py          # JWT + bcrypt helpers
+│       ├── dependencies.py      # Auth dependencies + plan enforcement
+│       ├── ai.py                # ChromaDB + RAG + LLM streaming
+│       ├── audit.py             # Audit log helper
+│       ├── redis_client.py      # Redis rate limiting
+│       ├── email_service.py     # Email stub (replace for production)
+│       ├── routes_auth.py
+│       ├── routes_assistant.py
+│       ├── routes_billing.py
+│       ├── routes_documents.py
+│       ├── routes_team.py
+│       ├── routes_settings.py
+│       ├── routes_usage.py
+│       ├── routes_audit.py
+│       └── routes_apikeys.py
+├── frontend/
+│   └── src/
+│       ├── App.tsx              # Routes
+│       ├── styles.css           # Global Tailwind + design tokens
+│       ├── context/             # AuthContext, ThemeContext
+│       ├── components/          # AppShell, UsageMeters, ConfirmDialog
+│       ├── pages/               # One file per route
+│       └── lib/
+│           ├── api.ts           # Axios client + token refresh interceptor
+│           └── types.ts         # Shared TypeScript types
+├── docker-compose.yml
+├── Dockerfile
+├── requirements.txt
+├── alembic.ini
+└── .env.example
+```
+
+---
+
+## Docker (Full Stack)
+
+To run the entire stack in Docker:
+
+```bash
+docker-compose up --build
+```
+
+> Note: In production, update `DATABASE_URL` and `REDIS_URL` in `.env` to point to the Docker service names (`postgres` and `redis`) rather than `localhost`.
+
+---
+
+## Production Checklist
+
+- [ ] Replace `email_service.py` stubs with a real provider (Resend / SendGrid / AWS SES)
+- [ ] Set `JWT_SECRET` to a cryptographically random value (`openssl rand -hex 32`)
+- [ ] Set `APP_ENV=production` in `.env`
+- [ ] Configure Stripe live keys and webhook endpoint
+- [ ] Add an nginx reverse proxy (or use a platform like Railway / Render)
+- [ ] Mount `chroma_db/` and `storage/` as persistent Docker volumes
+- [ ] Enable HTTPS / TLS
+- [ ] Set `FRONTEND_ORIGIN` to your production domain
+
+---
+
+## License
+
+MIT
