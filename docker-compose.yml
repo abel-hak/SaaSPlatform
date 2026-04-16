@@ -9,6 +9,9 @@ services:
       - .env
     ports:
       - "8000:8000"
+    volumes:
+      - chroma_data:/app/chroma_db
+      - storage_data:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,4 +52,6 @@ services:
 
 volumes:
   postgres_data_v2:
+  chroma_data:
+  storage_data:
 

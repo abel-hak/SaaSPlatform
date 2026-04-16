@@ -34,27 +34,21 @@ MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
 def _extract_text(path: Path) -> str:
     """Extract readable text from a file.
-    Handles PDFs via raw byte scanning (no extra deps) and text files via UTF-8.
+    Uses pypdf for PDF files (handles compressed streams, modern PDFs),
+    and UTF-8 for all text-based formats.
     """
     if path.suffix.lower() == ".pdf":
-        import re
         try:
-            raw = path.read_bytes()
-            parts: list[str] = []
-            for block in re.findall(rb'BT.*?ET', raw, re.DOTALL):
-                for lit in re.findall(rb'\(([^)]*)\)\s*Tj', block):
-                    parts.append(lit.decode('latin-1', errors='ignore'))
-                for arr in re.findall(rb'\[([^\]]*)\]\s*TJ', block):
-                    for lit in re.findall(rb'\(([^)]*)\)', arr):
-                        parts.append(lit.decode('latin-1', errors='ignore'))
-            text = ' '.join(parts).strip()
+            from pypdf import PdfReader
+            reader = PdfReader(str(path))
+            pages = [page.extract_text() or "" for page in reader.pages]
+            text = "\n".join(pages).strip()
             if not text:
-                # Fallback: grab printable ASCII sequences
-                text = re.sub(rb'[^\x20-\x7E\n]', b' ', raw).decode('ascii', errors='ignore')
+                logger.warning("pypdf returned empty text for %s — file may be scanned/image-only", path.name)
             return text
         except Exception as exc:
-            logger.warning("PDF extraction fallback for %s: %s", path.name, exc)
-            return path.read_bytes().decode('latin-1', errors='ignore')
+            logger.error("pypdf failed for %s: %s — returning empty string", path.name, exc)
+            return ""
     return path.read_text(encoding='utf-8', errors='ignore')
 
 
