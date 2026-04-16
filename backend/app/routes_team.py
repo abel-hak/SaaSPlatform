@@ -96,7 +96,11 @@ def invite_member(
 @router.post("/invites/accept")
 def accept_invite(payload: schemas.InviteAcceptRequest, db: Session = Depends(get_db)):
     invite = db.query(Invite).filter(Invite.token == payload.token).first()
-    if not invite or invite.expires_at < datetime.utcnow() or invite.accepted_at is not None:
+    if not invite or invite.accepted_at is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired invite")
+    now = datetime.now(timezone.utc)
+    expires = invite.expires_at if invite.expires_at.tzinfo else invite.expires_at.replace(tzinfo=timezone.utc)
+    if expires < now:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired invite")
 
     org = db.query(Organization).filter(Organization.id == invite.org_id).first()

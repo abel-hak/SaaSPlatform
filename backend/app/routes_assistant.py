@@ -160,7 +160,7 @@ async def chat(
             full_answer = "".join(answer_parts)
             conv = db.query(Conversation).filter(Conversation.id == conv_id).first()
             if conv:
-                conv.updated_at = datetime.utcnow()
+                conv.updated_at = datetime.now(timezone.utc)
             msg = Message(
                 conversation_id=conv_id,
                 role="assistant",

@@ -13,6 +13,21 @@ const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const getPasswordStrength = (pw: string): { score: number; label: string; color: string } => {
+    if (pw.length === 0) return { score: 0, label: '', color: '' };
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 1) return { score: 1, label: 'Weak', color: 'bg-red-500' };
+    if (score <= 3) return { score: 3, label: 'Fair', color: 'bg-amber-500' };
+    return { score: 5, label: 'Strong', color: 'bg-emerald-500' };
+  };
+
+  const strength = getPasswordStrength(password);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -134,9 +149,30 @@ const RegisterPage: React.FC = () => {
                 placeholder="8+ characters"
                 className="input"
               />
+              {/* Password strength meter */}
+              {password.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex gap-1">
+                    {[1, 2, 3].map((level) => (
+                      <div
+                        key={level}
+                        className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                          strength.score >= level * 1.5
+                            ? strength.color
+                            : 'bg-slate-200 dark:bg-[#424242]'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className={`text-xs font-medium ${
+                    strength.label === 'Weak' ? 'text-red-500' :
+                    strength.label === 'Fair' ? 'text-amber-500' : 'text-emerald-600'
+                  }`}>{strength.label}</p>
+                </div>
+              )}
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+            <button type="submit" disabled={loading || password.length < 8} className="btn-primary w-full mt-2">
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" /> Creating workspace…
