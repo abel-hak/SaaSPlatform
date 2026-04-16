@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     JSON,
@@ -36,8 +36,8 @@ class Organization(Base):
     ai_model = Column(String(255), nullable=True) 
     ai_api_key = Column(String(512), nullable=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     users = relationship("User", back_populates="organization")
 
@@ -51,8 +51,8 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(String(50), nullable=False, default="member")
     is_verified = Column(Boolean, default=False, nullable=False)
-    last_login = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     organization = relationship("Organization", back_populates="users")
 
@@ -67,9 +67,9 @@ class Invite(Base):
     email = Column(String(255), nullable=False)
     token = Column(String(255), nullable=False, unique=True)
     role = Column(String(50), nullable=False, default="member")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    accepted_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    accepted_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class PasswordResetToken(Base):
@@ -78,9 +78,9 @@ class PasswordResetToken(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     token = Column(String(255), nullable=False, unique=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class Document(Base):
@@ -93,7 +93,7 @@ class Document(Base):
     size_bytes = Column(Integer, nullable=False)
     chunk_count = Column(Integer, nullable=False, default=0)
     status = Column(String(50), nullable=False, default="processing")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class Conversation(Base):
@@ -103,8 +103,8 @@ class Conversation(Base):
     org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     title = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class Message(Base):
@@ -118,7 +118,7 @@ class Message(Base):
     )
     content = Column(Text, nullable=False)
     sources = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class Usage(Base):
@@ -130,7 +130,7 @@ class Usage(Base):
     ai_queries_used = Column(Integer, nullable=False, default=0)
     documents_uploaded = Column(Integer, nullable=False, default=0)
     seats_used = Column(Integer, nullable=False, default=0)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     __table_args__ = (UniqueConstraint("org_id", "period", name="uq_usage_org_period"),)
 
@@ -143,7 +143,7 @@ class AuditLog(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     action = Column(String(100), nullable=False)
     details = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class ApiKey(Base):
@@ -155,9 +155,9 @@ class ApiKey(Base):
     name = Column(String(255), nullable=False)
     key_prefix = Column(String(12), nullable=False)
     key_hash = Column(String(255), nullable=False)
-    last_used_at = Column(DateTime, nullable=True)
-    revoked_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class StripeEvent(Base):
@@ -166,5 +166,5 @@ class StripeEvent(Base):
     __tablename__ = "stripe_events"
 
     id = Column(String(255), primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
