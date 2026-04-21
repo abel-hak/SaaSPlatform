@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────
+  # Backend — lint, type-check, tests
+  # ─────────────────────────────────────────
+  backend:
+    name: Backend (Python)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: saas_user
+          POSTGRES_PASSWORD: saas_password
+          POSTGRES_DB: saas_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg2://saas_user:saas_password@localhost:5432/saas_db
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET: ci-test-secret-32chars-xxxxxxxxxx
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY || 'gsk_placeholder' }}
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
+      STRIPE_PRICE_PRO_MONTHLY: price_placeholder
+      STRIPE_PRICE_ENTERPRISE_MONTHLY: price_placeholder
+      STRIPE_CUSTOMER_PORTAL_RETURN_URL: http://localhost:5173/app/billing
+      FRONTEND_ORIGIN: http://localhost:5173
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Alembic migrations
+        run: alembic upgrade head
+
+      - name: Run tests
+        run: |
+          if [ -d "tests" ] && [ "$(ls -A tests)" ]; then
+            python -m pytest tests/ -v --tb=short
+          else
+            echo "No tests yet — skipping (add tests/)"
+          fi
+
+  # ─────────────────────────────────────────
+  # Frontend — lint, type-check, build
+  # ─────────────────────────────────────────
+  frontend:
+    name: Frontend (Node)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:8000

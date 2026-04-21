@@ -1,3 +1,5 @@
+import os
+import sentry_sdk
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -17,6 +19,18 @@ from .routes_apikeys import router as apikeys_router
 
 
 settings = get_settings()
+
+# ── Sentry ────────────────────────────────────────────────────────────────────
+# Set SENTRY_DSN in .env to enable. Safe to leave unset in development.
+_sentry_dsn = os.getenv("SENTRY_DSN", "")
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        environment=settings.app_env,
+        traces_sample_rate=0.1,   # 10% of requests traced for performance
+        send_default_pii=False,    # don't send emails / passwords to Sentry
+    )
+# ─────────────────────────────────────────────────────────────────────────────
 
 app = FastAPI(title=settings.app_name)
 
