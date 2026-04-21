@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -56,7 +57,11 @@ class User(Base):
 
     organization = relationship("Organization", back_populates="users")
 
-    __table_args__ = (UniqueConstraint("org_id", "email", name="uq_user_org_email"),)
+    __table_args__ = (
+        UniqueConstraint("org_id", "email", name="uq_user_org_email"),
+        Index("ix_users_org_id", "org_id"),
+        Index("ix_users_email", "email"),
+    )
 
 
 class Invite(Base):
@@ -70,6 +75,11 @@ class Invite(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     accepted_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_invites_org_id", "org_id"),
+        Index("ix_invites_token", "token"),
+    )
 
 
 class PasswordResetToken(Base):
@@ -95,6 +105,11 @@ class Document(Base):
     status = Column(String(50), nullable=False, default="processing")
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
+    __table_args__ = (
+        Index("ix_documents_org_id", "org_id"),
+        Index("ix_documents_org_id_created_at", "org_id", "created_at"),
+    )
+
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -105,6 +120,11 @@ class Conversation(Base):
     title = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    __table_args__ = (
+        Index("ix_conversations_org_id", "org_id"),
+        Index("ix_conversations_org_id_updated_at", "org_id", "updated_at"),
+    )
 
 
 class Message(Base):
@@ -119,6 +139,11 @@ class Message(Base):
     content = Column(Text, nullable=False)
     sources = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    __table_args__ = (
+        Index("ix_messages_conversation_id", "conversation_id"),
+        Index("ix_messages_conversation_id_created_at", "conversation_id", "created_at"),
+    )
 
 
 class Usage(Base):
@@ -145,6 +170,12 @@ class AuditLog(Base):
     details = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
+    __table_args__ = (
+        Index("ix_audit_log_org_id", "org_id"),
+        Index("ix_audit_log_org_id_created_at", "org_id", "created_at"),
+        Index("ix_audit_log_action", "action"),
+    )
+
 
 class ApiKey(Base):
     __tablename__ = "api_keys"
@@ -158,6 +189,11 @@ class ApiKey(Base):
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     revoked_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    __table_args__ = (
+        Index("ix_api_keys_org_id", "org_id"),
+        Index("ix_api_keys_org_id_revoked_at", "org_id", "revoked_at"),
+    )
 
 
 class StripeEvent(Base):
