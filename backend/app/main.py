@@ -75,7 +75,10 @@ async def security_and_state_middleware(request: Request, call_next):
         "connect-src 'self';"
     )
     # Remove server fingerprinting header
-    response.headers.pop("server", None)
+    try:
+        del response.headers["server"]
+    except KeyError:
+        pass
     return response
 
 
