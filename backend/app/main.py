@@ -51,15 +51,31 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def add_org_rls_header(request: Request, call_next):
+async def security_and_state_middleware(request: Request, call_next):
     """
-    For each authenticated request, ensure that PostgreSQL current_setting('app.current_org_id')
-    is set by the request handlers before executing RLS-protected queries.
-    This middleware mainly prepares request.state for later use.
+    1. Prepares request.state for auth dependencies.
+    2. Injects security headers on every response.
     """
     request.state.user = None
     request.state.org = None
     response = await call_next(request)
+
+    # Security headers (OWASP recommendations)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self';"
+    )
+    # Remove server fingerprinting header
+    response.headers.pop("server", None)
     return response
 
 
