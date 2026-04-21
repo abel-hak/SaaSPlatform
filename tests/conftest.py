@@ -22,13 +22,19 @@ os.environ.setdefault("FRONTEND_ORIGIN", "http://localhost:5173")
 
 from backend.app.main import app  # noqa: E402  (must be after env setup)
 from backend.app.db import Base, get_db  # noqa: E402
-import backend.app.redis_client as _redis_mod  # noqa: E402
 from unittest.mock import AsyncMock, patch  # noqa: E402
 
-# ── Disable Redis for all tests (rate_limit always allows, blacklist always clean)
-_redis_mod.rate_limit = AsyncMock(return_value=True)
-_redis_mod.is_token_blacklisted = AsyncMock(return_value=False)
-_redis_mod.blacklist_token = AsyncMock(return_value=None)
+
+# ── Mock Redis everywhere it's imported (patch at point of use) ────────────────
+@pytest.fixture(autouse=True)
+def mock_redis():
+    """Disable Redis for all tests — rate limiting always allows, blacklist always clean."""
+    with (
+        patch("backend.app.routes_auth.rate_limit", new=AsyncMock(return_value=True)),
+        patch("backend.app.routes_auth.is_token_blacklisted", new=AsyncMock(return_value=False)),
+        patch("backend.app.routes_auth.blacklist_token", new=AsyncMock(return_value=None)),
+    ):
+        yield
 
 
 # ── Build a test-only SQLite database ─────────────────────────────────────────
@@ -64,10 +70,12 @@ def client():
 
 @pytest.fixture()
 def registered_user(client):
-    """Register a user and return their auth tokens + email."""
+    """Register a user with a unique email and return their auth tokens."""
+    import uuid
+    unique = uuid.uuid4().hex[:8]
     payload = {
-        "org_name": "Test Org",
-        "email": "test@example.com",
+        "org_name": f"Test Org {unique}",
+        "email": f"test_{unique}@example.com",
         "password": "StrongPass123!",
     }
     res = client.post("/auth/register", json=payload)

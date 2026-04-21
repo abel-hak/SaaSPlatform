@@ -21,10 +21,9 @@ def test_usage_endpoint_returns_zero_on_new_org(client):
     headers = _register_and_login(client, "limits_usage@example.com", "Usage Org")
     res = client.get("/usage/", headers=headers)
     assert res.status_code == 200
-    data = res.json()
-    # Fresh org should have zero queries used
-    assert data["ai_queries_used"] == 0
-    assert data["documents_uploaded"] == 0
+    metrics = res.json()["usage"]  # response is {"usage": {...}}
+    assert metrics["ai_queries_used"] == 0
+    assert metrics["documents_uploaded"] == 0
 
 
 def test_documents_list_empty_on_new_org(client):
