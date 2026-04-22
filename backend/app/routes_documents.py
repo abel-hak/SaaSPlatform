@@ -31,6 +31,43 @@ ALLOWED_EXTENSIONS = {
 }
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
+# Magic bytes for dangerous/binary file types that must be rejected
+# even if the user renames them to .pdf or .txt
+_BLOCKED_SIGNATURES: list[tuple[bytes, str]] = [
+    (b"MZ",               "Windows PE executable (.exe, .dll)"),
+    (b"\x7fELF",          "Linux ELF executable"),
+    (b"\xca\xfe\xba\xbe", "macOS Mach-O binary"),
+    (b"PK\x03\x04",       "ZIP archive — use individual files instead"),
+    (b"Rar!",             "RAR archive"),
+    (b"\x1f\x8b",         "GZIP archive"),
+    (b"BZh",              "BZIP2 archive"),
+    (b"\x89PNG",          "PNG image — not a document"),
+    (b"\xff\xd8\xff",     "JPEG image — not a document"),
+    (b"GIF8",             "GIF image — not a document"),
+    (b"\x00\x00\x00\x0cjP", "JPEG 2000 image — not a document"),
+]
+
+# Allowed PDF magic bytes
+_PDF_MAGIC = b"%PDF"
+
+
+def _validate_content(filename: str, data: bytes) -> None:
+    """Raise HTTPException if the file content looks like a blocked binary type."""
+    header = data[:16]
+    for sig, label in _BLOCKED_SIGNATURES:
+        if header.startswith(sig):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Blocked file type detected: {label}. Upload plain-text documents or PDFs only.",
+            )
+    # Extra check: .pdf extension must actually start with %PDF
+    ext = Path(filename).suffix.lower()
+    if ext == ".pdf" and not header.startswith(_PDF_MAGIC):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File has a .pdf extension but is not a valid PDF.",
+        )
+
 
 def _extract_text(path: Path) -> str:
     """Extract readable text from a file.
