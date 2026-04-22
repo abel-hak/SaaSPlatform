@@ -34,19 +34,17 @@ if _sentry_dsn:
 
 app = FastAPI(title=settings.app_name)
 
-# Allow local dev origins explicitly to avoid CORS issues
-cors_origins = {
-    str(settings.frontend_origin),
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-}
+# CORS: in production only allow FRONTEND_ORIGIN; in dev also allow localhost
+_cors_origins = [str(settings.frontend_origin)]
+if settings.app_env == "development":
+    _cors_origins += ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(cors_origins),
+    allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 

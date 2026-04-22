@@ -146,6 +146,9 @@ async def upload_document(
             ),
         )
 
+    # MIME / magic-byte check — catches renamed binary files (e.g. malware.exe → doc.pdf)
+    _validate_content(file.filename or "", contents)
+
     doc = Document(
         org_id=org.id,
         uploaded_by=user.id,
