@@ -10,7 +10,7 @@ PlanName = Literal["free", "pro", "enterprise"]
 
 class Settings(BaseSettings):
     app_name: str = Field("Multi-Tenant AI SaaS", alias="APP_NAME")
-    app_env: str = Field("development", alias="APP_ENV")
+    app_env: str = Field("development", alias="APP_ENV")  # "development" | "production" | "staging"
     app_host: str = Field("0.0.0.0", alias="APP_HOST")
     app_port: int = Field(8000, alias="APP_PORT")
 
