@@ -61,7 +61,7 @@ const RegisterPage: React.FC = () => {
         </div>
         <div className="relative space-y-6">
           <blockquote className="text-white/90 text-xl font-medium leading-relaxed">
-            "We set up our entire AI workspace in under 5 minutes. Documents indexed, team invited, assistant ready."
+            &quot;We set up our entire AI workspace in under 5 minutes. Documents indexed, team invited, assistant ready.&quot;
           </blockquote>
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm">

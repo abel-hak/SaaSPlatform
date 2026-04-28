@@ -10,7 +10,7 @@ import EmptyState from '../components/EmptyState';
 
 const TeamPage: React.FC = () => {
   const { me } = useAuth();
-  const plan = usePlan();
+  const _plan = usePlan();
   const [data, setData] = useState<MemberListResponse | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -104,7 +104,7 @@ const TeamPage: React.FC = () => {
 
       {atSeatLimit && (
         <div className="card p-4 border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/10">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">You've reached your team seat limit.</p>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">You&apos;ve reached your team seat limit.</p>
           <p className="text-xs text-amber-700/80 dark:text-amber-400/80 mt-0.5">
             Upgrade to a higher plan. Current: {data?.seats_used} / {data?.seats_limit}.
           </p>
