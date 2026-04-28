@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api, API_BASE_URL } from '../lib/api';
+import { api } from '../lib/api';
 import { usePlan } from '../context/AuthContext';
 import { useIsAdmin } from '../hooks/useRole';
 import { Lock, Activity, Download, Loader2 } from 'lucide-react';

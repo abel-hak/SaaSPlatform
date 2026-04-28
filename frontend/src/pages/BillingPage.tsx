@@ -36,7 +36,7 @@ const BillingPage: React.FC = () => {
   };
 
   const planLabel = plan === 'enterprise' ? 'Enterprise' : plan === 'pro' ? 'Pro' : 'Free';
-  const planBadge = plan === 'enterprise' || plan === 'pro' ? 'badge-brand' : 'badge-neutral';
+  const _planBadge = plan === 'enterprise' || plan === 'pro' ? 'badge-brand' : 'badge-neutral';
 
   return (
     <div className="space-y-6">

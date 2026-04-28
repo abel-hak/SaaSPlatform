@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, UploadCloud, MessageCircle, Users, FileText, Loader2 } from 'lucide-react';
+import { ArrowRight, UploadCloud, MessageCircle, Users, FileText } from 'lucide-react';
 import { api, UsageMetrics, UsageResponse } from '../lib/api';
 import { useAuth, usePlan } from '../context/AuthContext';
 import UsageMeters from '../components/UsageMeters';
