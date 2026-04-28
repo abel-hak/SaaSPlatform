@@ -34,6 +34,10 @@ class Settings(BaseSettings):
 
     frontend_origin: AnyHttpUrl = Field("http://localhost:5173", alias="FRONTEND_ORIGIN")
 
+    # Field encryption key for sensitive DB columns (BYOK API keys)
+    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    encryption_key: str = Field("", alias="ENCRYPTION_KEY")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

@@ -10,6 +10,7 @@ from . import schemas
 from .ai import build_prompt, query_context, sse_chat_response, stream_chat_completion
 from .audit import log_audit_event
 from .config import PlanName, get_plan_limits
+from .crypto import decrypt_field
 from .db import get_db
 from .dependencies import get_current_org, get_current_user, get_usage_for_org
 from .models import Conversation, Message, Organization, Usage, User
@@ -141,7 +142,8 @@ async def chat(
     # Capture ORM variables explicitly to prevent DetachedInstanceError
     _ai_provider = org.ai_provider
     _ai_model = org.ai_model
-    _ai_api_key = org.ai_api_key
+    # Decrypt BYOK key before passing to the AI client
+    _ai_api_key = decrypt_field(org.ai_api_key) if org.ai_api_key else None
 
     async def token_stream():
         answer_parts: list[str] = []

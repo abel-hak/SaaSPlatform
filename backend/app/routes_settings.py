@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from . import schemas
 from .audit import log_audit_event
+from .crypto import encrypt_field
 from .db import get_db
 from .dependencies import get_current_org, get_current_user, require_role
 from .models import Organization, User
@@ -45,7 +46,8 @@ def update_ai_prefs(
     if payload.ai_model:
         org.ai_model = payload.ai_model
     if payload.ai_api_key and payload.ai_api_key.strip():
-        org.ai_api_key = payload.ai_api_key.strip()
+        # Encrypt at rest — never store plaintext BYOK keys in the DB
+        org.ai_api_key = encrypt_field(payload.ai_api_key.strip())
 
     db.commit()
     log_audit_event(db, org.id, user.id, "ai_prefs_updated", {"provider": payload.ai_provider})
