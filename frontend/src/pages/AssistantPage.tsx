@@ -56,7 +56,7 @@ MessageBubble.displayName = 'MessageBubble';
 
 /* ── Main page ── */
 const AssistantPage: React.FC = () => {
-  const { me } = useAuth();
+  const { me: _me } = useAuth();
   const plan = usePlan() as PlanName | null;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<string | null>(null);

@@ -75,7 +75,7 @@ const AcceptInvitePage: React.FC = () => {
         </div>
         <div className="relative space-y-4">
           <Users className="w-12 h-12 text-white/60" />
-          <h2 className="text-white text-2xl font-bold">You've been invited</h2>
+          <h2 className="text-white text-2xl font-bold">You&apos;ve been invited</h2>
           <p className="text-white/70 text-base max-w-md">
             A teammate invited you to join their Aurora workspace. Set a password to get started.
           </p>

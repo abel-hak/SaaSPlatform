@@ -31,7 +31,7 @@ const UsageMeters: React.FC<Props> = ({ usage, onUpgradeClick }) => {
         <div className="card p-4 border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-              You're approaching your plan limits.
+              You&apos;re approaching your plan limits.
             </p>
             <ul className="mt-1 text-xs text-amber-700/80 dark:text-amber-400/80 space-y-0.5">
               {usage.warnings.map((w) => (
