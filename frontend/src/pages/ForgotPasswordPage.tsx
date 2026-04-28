@@ -41,7 +41,7 @@ const ForgotPasswordPage: React.FC = () => {
           <Mail className="w-12 h-12 text-white/60" />
           <h2 className="text-white text-2xl font-bold">Check your email</h2>
           <p className="text-white/70 text-base max-w-md">
-            We'll send you a secure link to reset your password. The link expires after 1 hour.
+            We&apos;ll send you a secure link to reset your password. The link expires after 1 hour.
           </p>
         </div>
         <div className="relative flex gap-2">
@@ -73,10 +73,10 @@ const ForgotPasswordPage: React.FC = () => {
               </div>
               <h1 className="text-2xl font-bold text-slate-900">Check your inbox</h1>
               <p className="text-sm text-slate-500">
-                If an account exists for <strong className="text-slate-700">{email}</strong>, we've sent a password reset link. It expires in 1 hour.
+                If an account exists for <strong className="text-slate-700">{email}</strong>, we&apos;ve sent a password reset link. It expires in 1 hour.
               </p>
               <p className="text-xs text-slate-400 mt-4">
-                Didn't get the email? Check your spam folder or{' '}
+                Didn&apos;t get the email? Check your spam folder or{' '}
                 <button onClick={() => setSent(false)} className="text-brand-600 hover:text-brand-700 font-medium">
                   try again
                 </button>.
@@ -90,7 +90,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="mb-8">
                 <h1 className="text-2xl font-bold text-slate-900">Reset your password</h1>
                 <p className="mt-1.5 text-sm text-slate-500">
-                  Enter the email address associated with your account and we'll send a reset link.
+                  Enter the email address associated with your account and we&apos;ll send a reset link.
                 </p>
               </div>
 
