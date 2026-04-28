@@ -8,7 +8,7 @@ const NotFoundPage: React.FC = () => {
         <div className="text-5xl font-bold text-slate-900 dark:text-white">404</div>
         <div className="text-base font-semibold text-slate-700 dark:text-[#d4d4d4]">Page not found</div>
         <p className="text-sm text-slate-500 dark:text-[#9a9a9a]">
-          The page you're looking for doesn't exist. It may have been moved or deleted.
+          The page you&apos;re looking for doesn&apos;t exist. It may have been moved or deleted.
         </p>
         <Link to="/" className="btn-primary inline-flex text-sm py-2 px-5">
           Back to home

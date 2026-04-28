@@ -32,7 +32,7 @@ const LandingPage: React.FC = () => {
         <section className="grid md:grid-cols-2 gap-10 items-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">
-              Your team's AI-native{' '}
+              Your team&apos;s AI-native{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-violet-400">
                 knowledge workspace
               </span>
@@ -92,7 +92,7 @@ const LandingPage: React.FC = () => {
                     <MessageCircle className="w-3 h-3 text-violet-400" />
                   </div>
                   <div className="bg-slate-900/80 rounded-xl px-3 py-2 border border-slate-800/80 text-slate-200">
-                    You've used <span className="font-semibold text-emerald-300">32 / 50</span> AI queries and{' '}
+                    You&apos;ve used <span className="font-semibold text-emerald-300">32 / 50</span> AI queries and{' '}
                     <span className="font-semibold text-emerald-300">3 / 5</span> document uploads on your Free plan.
                     Consider upgrading to Pro for higher limits.
                   </div>

@@ -45,7 +45,7 @@ const LoginPage: React.FC = () => {
         </div>
         <div className="relative space-y-6">
           <blockquote className="text-white/90 text-xl font-medium leading-relaxed">
-            "Aurora helped our team cut research time in half. The AI understands our documents better than we expected."
+            &quot;Aurora helped our team cut research time in half. The AI understands our documents better than we expected.&quot;
           </blockquote>
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm">JM</div>
@@ -131,7 +131,7 @@ const LoginPage: React.FC = () => {
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-500">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link to="/register" className="text-brand-600 hover:text-brand-700 font-medium">
               Create one free
             </Link>
